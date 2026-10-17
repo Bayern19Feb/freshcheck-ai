@@ -6,3 +6,4 @@ tests/e2e/last-run.json
 .venv/
 data/
 __pycache__/
+android-package/
