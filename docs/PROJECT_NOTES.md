@@ -110,3 +110,12 @@ See SESSION_HANDOFF.md.
 **Checks:** reviewed screenshots at 390 px and 1280 px (`tests/fixtures/shots-design.mjs`, output in `tests/e2e/screenshots/design/`); fixed overlapping hero decoration, a focus ring around `<main>`, awkward chip wrapping and extra spacing. `tools/check.mjs` pass, 22/22 unit, 29/29 browser tests.
 
 **Not done:** dark mode; testing the new design on a real phone.
+
+---
+
+## Session 4 — 17 Oct 2026: deployment + Android APK
+
+- Created git repository, pushed to https://github.com/Bayern19Feb/freshcheck-ai (public). First Pages run failed until the Pages source was set to "GitHub Actions"; second run succeeded.
+- Live app: https://bayern19feb.github.io/freshcheck-ai/ — checked in headless Chrome: all files 200, AI ready, real inference, service worker active, no installability errors.
+- Android package built with PWABuilder's packaging service (`tools/android/make-apk.mjs`, package id `io.github.bayern19feb.freshcheck`, new signing key). APK published at `public/download/FreshCheck-AI.apk`; signing key + passwords kept only in git-ignored `android-package/` — **back it up**; it is needed for any future update of the same app.
+- Not yet done: Digital Asset Links. Without `https://bayern19feb.github.io/.well-known/assetlinks.json` (needs a repo named `Bayern19Feb.github.io`), the APK shows a small browser address bar at the top. APK not yet tested on a real phone.
