@@ -1,0 +1,74 @@
+{
+  "_comment": "Edit this file after training and evaluating a model. See docs/AI_MODEL_GUIDE.md. Never enter results you did not measure.",
+  "modelName": "freshcheck-starter",
+  "modelVersion": "starter-v1",
+  "exportDate": "2026-10-17T08:38:50.328Z",
+  "source": "Starter model trained by the project with the Teachable Machine library (same method as the Teachable Machine website), from openly licensed public datasets. See docs/MODEL_EVALUATION.md.",
+  "architecture": "Teachable Machine image model (MobileNet transfer learning), combined fruit + condition classes, run in the browser with TensorFlow.js",
+  "trainingData": "Public datasets: Project-AgML fresh_rotten_fruit_classification / Sultana et al. 2022 (CC BY 4.0) for apple, banana, orange, grapes, strawberry, guava and the \"Other\" class (jujube, pomegranate); Papaya Freshness Classification Dataset, Mendeley 7mgj5bvp5h (CC BY 4.0); FruitVision, Mendeley xkbjx8959c (CC BY-NC-ND 4.0) for mango. n/a training photos (+ mirrored copies), 360 validation, 720 test. No overripe class.",
+  "testProcedure": "Threshold chosen on 360 validation photos; final results measured on 720 separate test photos from the same datasets (near-duplicates kept on one side of the split). Not yet tested on phone photos of real fruit.",
+  "lastVerified": "2026-10-17",
+  "thresholds": {
+    "default": 0.7,
+    "perFruit": {}
+  },
+  "thresholdNote": "Chosen on 2026-10-17 from 360 validation photos (rule: fewest spoiled-shown-as-fresh errors, then best accuracy). Dataset photos only — re-check with your own phone photos.",
+  "minMargin": 0.15,
+  "fruits": {
+    "apple": {
+      "evaluation": "passed",
+      "testImages": 80,
+      "accuracy": 0.962,
+      "notes": "2026-10-17: dataset test photos only (not phone photos). Correct when answered 96.2%, answered 97.5%, spoiled shown as fresh 0."
+    },
+    "banana": {
+      "evaluation": "failed",
+      "testImages": 80,
+      "accuracy": 0.988,
+      "notes": "2026-10-17: dataset test photos only (not phone photos). Correct when answered 98.8%, answered 100.0%, spoiled shown as fresh 1."
+    },
+    "orange": {
+      "evaluation": "passed",
+      "testImages": 80,
+      "accuracy": 1,
+      "notes": "2026-10-17: dataset test photos only (not phone photos). Correct when answered 100.0%, answered 97.5%, spoiled shown as fresh 0."
+    },
+    "mango": {
+      "evaluation": "passed",
+      "testImages": 80,
+      "accuracy": 0.975,
+      "notes": "2026-10-17: dataset test photos only (not phone photos). Correct when answered 97.5%, answered 98.8%, spoiled shown as fresh 0."
+    },
+    "grapes": {
+      "evaluation": "passed",
+      "testImages": 80,
+      "accuracy": 0.988,
+      "notes": "2026-10-17: dataset test photos only (not phone photos). Correct when answered 98.8%, answered 100.0%, spoiled shown as fresh 0."
+    },
+    "strawberry": {
+      "evaluation": "failed",
+      "testImages": 80,
+      "accuracy": 0.988,
+      "notes": "2026-10-17: dataset test photos only (not phone photos). Correct when answered 98.8%, answered 100.0%, spoiled shown as fresh 1."
+    },
+    "guava": {
+      "evaluation": "passed",
+      "testImages": 80,
+      "accuracy": 1,
+      "notes": "2026-10-17: dataset test photos only (not phone photos). Correct when answered 100.0%, answered 97.5%, spoiled shown as fresh 0."
+    },
+    "papaya": {
+      "evaluation": "passed",
+      "testImages": 80,
+      "accuracy": 1,
+      "notes": "2026-10-17: dataset test photos only (not phone photos). Correct when answered 100.0%, answered 98.8%, spoiled shown as fresh 0."
+    }
+  },
+  "knownLimitations": [
+    "The model looks only at the outside of the fruit in one photo. It cannot see inside the fruit, detect bacteria or toxins, or decide whether food is safe to eat.",
+    "It is a whole-image classifier: it does not point to particular spots, mould patches or defects.",
+    "Trained and tested only on public dataset photos. Accuracy on your own phone photos, lighting and backgrounds is likely lower and has not been measured yet.",
+    "No \"overripe\" class: the datasets only label fresh and rotten fruit, so ripe fruit with natural spots may be called spoiled.",
+    "The \"Other\" class only contains jujube and pomegranate. Photos of everyday objects (not fruit) can still get a confident fruit label."
+  ]
+}

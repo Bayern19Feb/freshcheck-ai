@@ -1,0 +1,8 @@
+node_modules/
+tests/fixtures/
+tests/e2e/screenshots/
+tests/e2e/last-run.json
+*.log
+.venv/
+data/
+__pycache__/

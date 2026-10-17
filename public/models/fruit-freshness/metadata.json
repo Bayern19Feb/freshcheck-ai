@@ -1,0 +1,29 @@
+{
+  "tfjsVersion": "1.3.1",
+  "tmVersion": "2.4.x",
+  "packageVersion": "0.8.5",
+  "packageName": "@teachablemachine/image",
+  "timeStamp": "2026-10-17T08:38:50.328Z",
+  "userMetadata": {},
+  "modelName": "freshcheck-starter",
+  "labels": [
+    "Apple - Fresh",
+    "Apple - Spoiled",
+    "Banana - Fresh",
+    "Banana - Spoiled",
+    "Grapes - Fresh",
+    "Grapes - Spoiled",
+    "Guava - Fresh",
+    "Guava - Spoiled",
+    "Mango - Fresh",
+    "Mango - Spoiled",
+    "Orange - Fresh",
+    "Orange - Spoiled",
+    "Papaya - Fresh",
+    "Papaya - Spoiled",
+    "Strawberry - Fresh",
+    "Strawberry - Spoiled",
+    "Other"
+  ],
+  "imageSize": 224
+}

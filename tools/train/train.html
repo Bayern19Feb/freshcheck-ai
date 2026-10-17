@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>FreshCheck AI — model training</title>
+  <!-- Same libraries the app uses (TensorFlow.js 1.3.1 + @teachablemachine/image 0.8.5). -->
+  <script src="/public/vendor/tf.min.js"></script>
+  <script src="/public/vendor/teachablemachine-image.min.js"></script>
+</head>
+<body>
+<pre id="log">Training page. Driven by tools/train/train.mjs</pre>
+<script>
+// Trains a Teachable Machine image model in this browser tab, exactly the way the
+// Teachable Machine website does (MobileNet v2, alpha 0.35, transfer learning),
+// then scores the validation and test photos with the finished model.
+
+const IMAGE_SIZE = 224;
+const log = (msg) => { document.getElementById('log').textContent += `\n${msg}`; window.nodeLog?.(msg); };
+
+function loadImage(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error(`could not load ${url}`));
+    img.src = url;
+  });
+}
+
+// Same centre-square crop + resize that Teachable Machine uses (utils/canvas.js cropTo).
+function cropTo(image, size, flipped = false) {
+  const canvas = document.createElement('canvas');
+  const min = Math.min(image.width, image.height);
+  const scale = size / min;
+  const w = Math.ceil(image.width * scale);
+  const h = Math.ceil(image.height * scale);
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  if (flipped) { ctx.translate(size, 0); ctx.scale(-1, 1); }
+  ctx.drawImage(image, -Math.floor((w - size) / 2), -Math.floor((h - size) / 2), w, h);
+  return canvas;
+}
+
+const toBase64 = (buf) => {
+  const bytes = new Uint8Array(buf);
+  let s = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(s);
+};
+
+window.runTraining = async ({ rows, labels, params, flipAugment, seed }) => {
+  const t0 = performance.now();
+  log(`TF.js ${tf.version.tfjs}, backend ${tf.getBackend()}`);
+  const model = await tmImage.createTeachable(
+    { tfjsVersion: tf.version.tfjs, tmVersion: '2.4.x', packageVersion: '0.8.5', packageName: '@teachablemachine/image',
+      modelName: 'freshcheck-starter', imageSize: IMAGE_SIZE },
+    { version: 2, alpha: 0.35 },
+  );
+  model.setLabels(labels);
+  model.setSeed(seed);
+  log(`MobileNet loaded in ${Math.round(performance.now() - t0)} ms`);
+
+  // 1. Add training examples (MobileNet features are computed here).
+  const train = rows.filter((r) => r.split === 'train');
+  let n = 0;
+  for (const r of train) {
+    const img = await loadImage(`/data/images/${encodeURI(r.file)}`);
+    const idx = labels.indexOf(r.class);
+    await model.addExample(idx, cropTo(img, IMAGE_SIZE));
+    if (flipAugment) await model.addExample(idx, cropTo(img, IMAGE_SIZE, true));
+    if (++n % 200 === 0) log(`  added ${n}/${train.length} training photos`);
+  }
+  log(`Added ${n} training photos (${flipAugment ? 'plus mirrored copies' : 'no augmentation'})`);
+
+  // 2. Train (Teachable Machine holds back 15% of these examples internally).
+  const history = [];
+  const t1 = performance.now();
+  await model.train(params, {
+    onEpochEnd: (epoch, logs) => {
+      history.push({ epoch: epoch + 1, loss: logs.loss, acc: logs.acc, val_loss: logs.val_loss, val_acc: logs.val_acc });
+      if ((epoch + 1) % 5 === 0) log(`  epoch ${epoch + 1}/${params.epochs}  loss ${logs.loss.toFixed(3)}  val_acc ${(logs.val_acc ?? 0).toFixed(3)}`);
+    },
+  });
+  log(`Trained in ${Math.round(performance.now() - t1)} ms`);
+
+  // 3. Score validation + test photos with the finished model (same predict() as the app).
+  const scored = [];
+  const held = rows.filter((r) => r.split !== 'train');
+  for (const r of held) {
+    const img = await loadImage(`/data/images/${encodeURI(r.file)}`);
+    const preds = await model.predict(img);
+    scored.push({ file: r.file, class: r.class, split: r.split,
+      scores: preds.map((p) => ({ className: p.className, probability: p.probability })) });
+  }
+  log(`Scored ${scored.length} held-out photos`);
+
+  // 4. Export in Teachable Machine's format.
+  let files = null;
+  await model.save(tf.io.withSaveHandler(async (artifacts) => {
+    files = {
+      'model.json': JSON.stringify({
+        modelTopology: artifacts.modelTopology,
+        format: 'layers-model',
+        generatedBy: `TensorFlow.js tfjs-layers v${tf.version.tfjs}`,
+        convertedBy: null,
+        weightsManifest: [{ paths: ['weights.bin'], weights: artifacts.weightSpecs }],
+      }),
+      'weights.bin': toBase64(artifacts.weightData),
+    };
+    return { modelArtifactsInfo: { dateSaved: new Date(), modelTopologyType: 'JSON' } };
+  }));
+  const metadata = {
+    tfjsVersion: tf.version.tfjs, tmVersion: '2.4.x', packageVersion: '0.8.5', packageName: '@teachablemachine/image',
+    timeStamp: new Date().toISOString(), userMetadata: {}, modelName: 'freshcheck-starter', labels, imageSize: IMAGE_SIZE,
+  };
+  files['metadata.json'] = JSON.stringify(metadata, null, 2);
+  return { files, scored, history, backend: tf.getBackend(), totalMs: Math.round(performance.now() - t0) };
+};
+window.trainingPageReady = true;
+</script>
+</body>
+</html>
