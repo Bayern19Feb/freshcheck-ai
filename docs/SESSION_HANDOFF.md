@@ -2,6 +2,10 @@
 
 **Last session:** 3 — 17 Oct 2026 (v0.3.0, visual redesign). Read this first, then the newest entry in `PROJECT_NOTES.md`.
 
+## Online
+- Repository: https://github.com/Bayern19Feb/freshcheck-ai (public)
+- App URL: https://bayern19feb.github.io/freshcheck-ai/ (GitHub Pages, Source = GitHub Actions; deploys on every push to `main`)
+
 ## What is working now
 - The complete app in `public/` (all screens, camera/upload, history, learning centre, quiz, evaluation tool, offline support).
 - **A starter model is installed** (`public/models/fruit-freshness/`): 17 classes = 8 fruits × Fresh/Spoiled + Other. It was trained from openly licensed public datasets with the Teachable Machine library.
