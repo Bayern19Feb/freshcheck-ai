@@ -40,8 +40,8 @@ Last updated: 17 Oct 2026 (session 2).
 | 29 | PWA manifest + icons + service worker | Implemented | Install prompt Not Tested on a phone |
 | 30 | Offline use | Tested | E25 (headless Chrome) — Not Verified on a phone |
 | 31 | Production build check | Tested | `tools/check.mjs` |
-| 32 | Deployment config (GitHub Actions) | Implemented | Not run (no repository yet) |
-| 33 | Deployed URL verified | Not Started | Needs the student's GitHub account |
+| 32 | Deployment config (GitHub Actions) | Tested | Run 2 succeeded (17 Oct 2026); run 1 failed until Pages source was set to "GitHub Actions" |
+| 33 | Deployed URL verified | Tested (desktop Chrome) | https://bayern19feb.github.io/freshcheck-ai/ — all files 200, AI ready, real inference, service worker active, no installability errors (headless Chrome, 17 Oct 2026). Not yet checked on the Android phone |
 | 34 | Real Android phone test | Not Started | — |
 | 35 | Performance measured on a phone | Not Started | App shows measured load/analysis times; none recorded yet |
 | 36 | Documentation set (14 files) | Implemented | Must be updated after model training |
