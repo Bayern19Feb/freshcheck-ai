@@ -20,7 +20,7 @@ export function render(main) {
         <div class="page-head"><p class="eyebrow">FreshCheck AI</p><h1>More</h1></div>
         <div class="grid-2">
           <a class="tile" href="#/dashboard"><span class="icon-chip sky">${icon('chart')}</span><strong>Dashboard</strong><span>Your scan counts</span></a>
-          <a class="tile" href="#/fruits"><span class="icon-chip berry">${icon('apple')}</span><strong>Supported fruits</strong><span>Status of all 8 fruits</span></a>
+          <a class="tile" href="#/fruits"><span class="icon-chip berry">${icon('apple')}</span><strong>Fruit library</strong><span>All fruits and AI status</span></a>
           <a class="tile" href="#/model"><span class="icon-chip">${icon('cpu')}</span><strong>Model information</strong><span>Source, classes, limits</span></a>
           <a class="tile" href="#/evaluate"><span class="icon-chip plum">${icon('flask')}</span><strong>Test the model</strong><span>Measure accuracy with test photos</span></a>
         </div>

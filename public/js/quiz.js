@@ -64,6 +64,17 @@ export const QUESTIONS = [
     explain: 'Bacteria are microscopic. A photo can only show the outside appearance, so it can never prove a fruit is safe.',
   },
   {
+    q: 'The fruit recogniser says "Kiwi", but the freshness checker was never trained on kiwis. What does FreshCheck AI do?',
+    options: [
+      'It guesses that the kiwi is fresh',
+      'It names the fruit and asks you to check its freshness yourself',
+      'It says the kiwi is rotten',
+      'It refuses to open',
+    ],
+    answer: 1,
+    explain: 'An honest AI app only answers what it was trained and tested for. For other fruits it gives tips instead of guessing.',
+  },
+  {
     q: 'What is a good way to reduce fruit waste at home?',
     options: [
       'Throw away fruit at the first brown spot',

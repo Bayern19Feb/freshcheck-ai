@@ -3,7 +3,7 @@
 //
 // States: 'idle' -> 'loading' -> 'ready' | 'error'
 
-import { MODEL_DIR, MODEL_LOAD_TIMEOUT } from './config.js';
+import { MODEL_DIR, MODEL_ID_DIR, MODEL_LOAD_TIMEOUT } from './config.js';
 import { getPref } from './prefs.js';
 
 const listeners = new Set();
@@ -16,8 +16,10 @@ export const modelState = {
   backend: null,
   loadMs: null,
   warmupMs: null,
+  id: { status: 'off', labels: null, metadata: null, url: null, error: null },  // fruit identifier (optional)
 };
 let model = null;
+let idModel = null;
 let loadPromise = null;
 
 export const MODEL_ERRORS = {
@@ -95,23 +97,29 @@ async function fetchJSON(url) {
   }
 }
 
-async function doLoad() {
-  const started = performance.now();
-  const base = modelBaseUrl();
-  modelState.url = base;
+/**
+ * Where the fruit-identifier model lives, or null if it should not be used.
+ * If a custom freshness model location is set, the identifier is only used when
+ * its own location is set too (so it cannot contradict someone else's model).
+ */
+export function idModelBaseUrl() {
+  let url = getPref('idModelUrl', '');
+  if (!url) {
+    if (getPref('modelUrl', '')) return null;
+    url = MODEL_ID_DIR;
+  }
+  if (!url.endsWith('/')) url += '/';
+  return url;
+}
 
-  await loadScript('vendor/tf.min.js');
-  await loadScript('vendor/teachablemachine-image.min.js');
-  if (!window.tf || !window.tmImage) throw new ModelError('library', 'globals missing');
-
-  // Check both files first so we can give a clear message if they are missing.
+/** Load a Teachable Machine model + metadata from a folder URL. */
+async function loadTmModel(base) {
   const [modelJson, metadata] = await Promise.all([
     fetchJSON(`${base}model.json`),
     fetchJSON(`${base}metadata.json`),
   ]);
   if (!modelJson.modelTopology || !modelJson.weightsManifest) throw new ModelError('bad-files', 'model.json has no topology/weights');
   if (!Array.isArray(metadata.labels) || metadata.labels.length < 2) throw new ModelError('bad-files', 'metadata.json has no labels');
-
   let loaded;
   try {
     loaded = await window.tmImage.load(`${base}model.json`, `${base}metadata.json`);
@@ -120,7 +128,42 @@ async function doLoad() {
   }
   const classes = loaded.getTotalClasses();
   if (classes !== metadata.labels.length) throw new ModelError('mismatch', `${classes} outputs vs ${metadata.labels.length} labels`);
+  return { loaded, metadata };
+}
 
+/** The identifier is optional: if it is missing or broken the app still works with the freshness model alone. */
+async function loadIdentifier() {
+  const base = idModelBaseUrl();
+  modelState.id = { status: base ? 'loading' : 'off', labels: null, metadata: null, url: base, error: null };
+  if (!base) return;
+  try {
+    const { loaded, metadata } = await loadTmModel(base);
+    const blank = document.createElement('canvas');
+    blank.width = blank.height = metadata.imageSize || 224;
+    await loaded.predict(blank);
+    idModel = loaded;
+    Object.assign(modelState.id, { status: 'ready', labels: metadata.labels.slice(), metadata });
+  } catch (err) {
+    idModel = null;
+    const code = err instanceof ModelError ? err.code : 'unknown';
+    Object.assign(modelState.id, { status: code === 'missing-files' ? 'absent' : 'error', error: { code, detail: err.detail || String(err) } });
+    if (code !== 'missing-files') console.warn('[FreshCheck] identifier model not used:', code, err.detail || err);
+  }
+}
+
+async function doLoad() {
+  const started = performance.now();
+  const base = modelBaseUrl();
+  modelState.url = base;
+
+  await loadScript('vendor/tf.min.js');
+  await loadScript('vendor/teachablemachine-image.min.js');
+  if (!window.tf || !window.tmImage) throw new ModelError('library', 'globals missing');
+  const idDone = loadIdentifier();
+
+  // Checks both files first so we can give a clear message if they are missing.
+  const { loaded, metadata } = await loadTmModel(base);
+  await idDone;
   modelState.loadMs = Math.round(performance.now() - started);
 
   // Warm-up run so the first real scan is not slow (also proves the model runs here).
@@ -165,17 +208,21 @@ export function loadModel() {
 /** Forget the current model (used when the model location changes). */
 export function resetModel() {
   model = null;
-  Object.assign(modelState, { status: 'idle', error: null, labels: null, metadata: null, url: null, backend: null, loadMs: null, warmupMs: null });
+  idModel = null;
+  Object.assign(modelState, { status: 'idle', error: null, labels: null, metadata: null, url: null, backend: null, loadMs: null, warmupMs: null,
+    id: { status: 'off', labels: null, metadata: null, url: null, error: null } });
   emit();
 }
 
 /**
- * Run the model on a canvas. Returns { predictions, ms }.
- * predictions = [{ className, probability }] straight from the model.
+ * Run the model(s) on a canvas. Returns { predictions, idPredictions, ms }.
+ * predictions   = freshness model scores [{ className, probability }]
+ * idPredictions = fruit-identifier scores, or null if no identifier is loaded
  */
 export async function classify(canvas) {
   if (modelState.status !== 'ready' || !model) throw new Error('Model is not ready');
   const t0 = performance.now();
   const predictions = await model.predict(canvas);
-  return { predictions, ms: Math.round(performance.now() - t0) };
+  const idPredictions = idModel ? await idModel.predict(canvas) : null;
+  return { predictions, idPredictions, ms: Math.round(performance.now() - t0) };
 }

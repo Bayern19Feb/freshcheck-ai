@@ -3,11 +3,11 @@
 import { html, icon, announce, toast } from '../ui.js';
 import { FRUITS } from '../fruits.js';
 import { loadModel, onModelChange, modelState, classify } from '../model.js';
-import { interpret, MalformedOutputError } from '../interpret.js';
+import { interpret, combine, MalformedOutputError } from '../interpret.js';
 import { loadPhoto, makeThumbnail, checkQuality, scaleToCanvas, ImageError, QUALITY_TEXT } from '../image.js';
 import { cameraAvailability, startCamera, grabFrame, CAMERA_ERRORS } from '../camera.js';
 import { ANALYSIS_MAX_SIDE } from '../config.js';
-import { getThresholds, getMinMargin, getSupportMap, getSupport, handoff } from '../state.js';
+import { getThresholds, getMinMargin, getSupportMap, getSupport, getIdThreshold, getFreshFruits, handoff } from '../state.js';
 import { makeScanRecord, saveScan, setFeedback } from '../history.js';
 import { storageState, isQuotaError } from '../db.js';
 import { resultCard } from './result-card.js';
@@ -69,8 +69,9 @@ export function render(main, _params, query) {
     if (s === 'ready') {
       const support = getSupport().filter((r) => r.status === 'supported' || r.status === 'experimental');
       box.innerHTML = String(html`<details class="note good" style="display:block;padding:0;box-shadow:none">
-        <summary style="min-height:48px;padding:10px 14px">${icon('cpu', 'inline-icon')} <span><strong>AI model ready</strong> · runs on this device, photos are not uploaded</span></summary>
-        <div class="small">${support.length ? `Fruits in this model: ${support.map((r) => r.fruit.name + (r.status === 'experimental' ? ' (experimental)' : '')).join(', ')}.` : 'This model has no classes for the eight target fruits.'}</div></details>`);
+        <summary style="min-height:48px;padding:10px 14px">${icon('cpu', 'inline-icon')} <span><strong>AI ready</strong> · runs on this device, photos are not uploaded</span></summary>
+        <div class="small">${modelState.id?.status === 'ready' ? `Fruit recogniser: knows ${getSupport().filter((r) => r.identifiable).length} fruits. ` : ''}${support.length ? `Freshness check: ${support.map((r) => r.fruit.name + (r.status === 'experimental' ? ' (experimental)' : '')).join(', ')}.` : 'The freshness model has no fruit classes.'}
+          <a href="#/fruits">Fruit library</a></div></details>`);
     } else if (s === 'loading') {
       box.innerHTML = String(html`<p class="note">${icon('cpu')}<span><strong>Loading the AI model…</strong> This can take a few seconds the first time.</span></p>`);
     } else if (s === 'error') {
@@ -228,15 +229,22 @@ export function render(main, _params, query) {
     announce('Analysing the photo.');
 
     try {
-      const { predictions, ms } = await classify(photo);
+      const { predictions, idPredictions, ms } = await classify(photo);
       if (token !== analysisToken || destroyed) return;   // cancelled or left the page
-      const result = interpret(predictions, {
+      const opts = {
         expectedCount: modelState.labels.length,
         thresholds: getThresholds(),
         minMargin: getMinMargin(),
         support: getSupportMap(),
         userFruitId: fruitSelect.value || null,
         poorImage: quality?.severe,
+      };
+      // Second opinion from the fruit recogniser (if installed).
+      const result = combine(interpret(predictions, opts), idPredictions, {
+        ...opts,
+        idExpectedCount: modelState.id?.labels?.length,
+        idThreshold: getIdThreshold(),
+        freshFruits: getFreshFruits(),
       });
       const record = makeScanRecord(result, {
         thumbnail: makeThumbnail(photo),

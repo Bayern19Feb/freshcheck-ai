@@ -26,6 +26,7 @@ export function render(main) {
             <dt>Version</dt><dd>${card.modelVersion || '—'}</dd>
             <dt>Library</dt><dd>${m ? `${m.packageName || ''} ${m.packageVersion || ''}, TF.js ${m.tfjsVersion || '?'}` : '—'}</dd>
             <dt>Runs on</dt><dd>${modelState.backend ? `This device (${modelState.backend})` : '—'}</dd>
+            <dt>Fruit recogniser</dt><dd data-testid="id-status">${{ ready: `Ready — ${modelState.id?.labels?.length} classes`, loading: 'Loading…', off: 'Not used', absent: 'Not installed', error: 'Could not be loaded' }[modelState.id?.status] || '—'}</dd>
             <dt>Load time</dt><dd>${modelState.loadMs ? `${modelState.loadMs} ms (measured now)` : '—'}</dd>
             <dt>Last verified</dt><dd>${card.lastVerified || 'Not verified yet'}</dd>
           </dl>
@@ -33,7 +34,7 @@ export function render(main) {
         </section>
 
         <section class="card stack">
-          <h2>Classes in the model</h2>
+          <h2>Classes in the freshness model</h2>
           ${labels ? html`<ul class="steps">${info.parsed.map((p) => html`<li><code>${p.raw}</code> → ${
             p.kind === 'fruit-condition' ? `${p.fruitId}, ${p.conditionId}` : p.kind === 'reject' ? 'reject class (not a supported fruit)' : 'NOT RECOGNISED by the app'}</li>`)}</ul>
             ${info.unknownLabels.length ? html`<p class="note warn">${icon('alert')}<span>Some class names do not follow the naming rule "Fruit - Condition". Predictions of those classes are shown as Uncertain.</span></p>` : ''}

@@ -1,5 +1,22 @@
 # Changelog — FreshCheck AI
 
+## 0.4.0 — 18 Oct 2026
+
+### Added
+- **Fruit recogniser** (second AI model, `public/models/fruit-id/`): 51 fruits + "Not a fruit".
+- **Freshness checker v2**: 16 fruits (apple, banana, grapes, guava, jujube, lime, mango, orange, papaya, peach, pear, persimmon, pomegranate, strawberry, tomato, watermelon), up to 500 fresh + 500 spoiled photos each.
+- Two-model logic (`combine()` in interpret.js): freshness answer only when both models agree; fruits without freshness data are named with a new "Fruit Identified — Check Freshness Yourself" result; disagreement → Uncertain.
+- **Fruit library** (`#/fruits`, `#/fruits/<id>`): 51 fruits, search (incl. Hindi names), recogniser/freshness status, fruit-specific tips (`public/js/fruit-data.js`).
+- Dataset v2 tools: `tools/dataset/fetch_v2.py` (6 licensed sources, leak-resistant splits), `tools/train/train_v2.mjs`, `eval_pipeline.mjs`, `report_v2.mjs`.
+- Learn topic "Two AIs working together"; a new quiz question; browser tests E30–E33; unit tests for the catalogue and two-model rules (31 total).
+
+### Changed
+- Model card v2: freshness threshold 90%, recogniser threshold 70% (both chosen on validation photos), per-fruit results.
+- Home and More screens point to the Fruit library; dashboard lists only scanned fruits.
+
+### Fixed
+- Model information screen crashed before the recogniser had loaded.
+
 ## 0.3.0 — 17 Oct 2026
 
 ### Changed (visual redesign)

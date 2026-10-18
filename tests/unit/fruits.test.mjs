@@ -25,7 +25,7 @@ test('recognises reject classes', () => {
 
 test('unknown names are flagged, never guessed', () => {
   assert.equal(parseLabel('Class 1').kind, 'unknown');
-  assert.equal(parseLabel('Kiwi - Fresh').kind, 'unknown');
+  assert.equal(parseLabel('Durian - Fresh').kind, 'unknown');
   assert.equal(parseLabel('Banana').kind, 'unknown');
   assert.equal(parseLabel('Banana - Tasty').kind, 'unknown');
 });
@@ -46,5 +46,5 @@ test('a fruit is only "supported" when it is in the model AND passed evaluation'
   assert.equal(s.mango, 'not-in-model', 'an evaluation record without model classes must not count');
   assert.equal(s.papaya, 'not-in-model');
   assert.equal(fruitSupport(null, card).every((r) => r.status === 'unknown'), true);
-  assert.equal(FRUITS.length, 8);
+  assert.ok(FRUITS.length >= 50, `only ${FRUITS.length} fruits`);
 });

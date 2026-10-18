@@ -4,7 +4,7 @@
 
 FreshCheck AI is a mobile-first web app (installable as a phone app / PWA). You take or upload a photo of a fruit, and a **trained image-classification model running on the phone** estimates whether the fruit *appears fresh*, *appears overripe*, or shows *possible signs of spoilage* — or says **Uncertain** when it cannot tell. It always explains that a photo cannot prove a fruit is safe to eat.
 
-> **Current state (17 Oct 2026, v0.2.0):** a **starter model** trained from openly licensed public fruit photo datasets is installed (8 fruits × fresh/spoiled + "Other"). On 720 held-out dataset photos it was correct **98.6% of the time when it answered** (threshold 70%); 6 fruits passed the project's test rule, Banana and Strawberry are *Experimental* — see [docs/MODEL_EVALUATION.md](docs/MODEL_EVALUATION.md). It has **not** yet been tested on real phone photos, the app is **not deployed**, and it has not been tried on a real Android phone. See [docs/SESSION_HANDOFF.md](docs/SESSION_HANDOFF.md).
+> **Current state (18 Oct 2026, v0.4.0):** two AI models are installed: a **fruit recogniser** for **51 fruits** (+ "Not a fruit") and a **freshness checker** for **16 fruits** (up to 500 fresh + 500 spoiled training photos each), all from openly licensed datasets. On held-out dataset photos the whole app was **98.0% correct when it answered** and the recogniser picked the right fruit **95.3%** of the time — see [docs/MODEL_EVALUATION.md](docs/MODEL_EVALUATION.md). Live at https://bayern19feb.github.io/freshcheck-ai/. Not yet tested with your own phone photos. See [docs/SESSION_HANDOFF.md](docs/SESSION_HANDOFF.md).
 
 ---
 
@@ -71,7 +71,9 @@ Open <http://localhost:8080> in Chrome. The app itself is just the `public/` fol
 | `npm run vendor` | Re-copies TensorFlow.js / Teachable Machine files into `public/vendor/` |
 | `npm run make:icons` | Re-draws the PNG app icons from `public/img/logo.svg` |
 | `npm run dataset` | Downloads and prepares the public training photos into `data/` (git-ignored) |
-| `npm run train` | Trains the starter model, installs it, writes `docs/MODEL_EVALUATION.md`, updates the model card |
+| `npm run train` | (v1) Trains the original 8-fruit starter model |
+| `npm run dataset:v2` | Downloads the v2 photo set (≈34,000 photos, 51 fruits) into `data/v2/` |
+| `npm run train:v2` | Trains both v2 models, tests them end to end, writes `docs/MODEL_EVALUATION.md`, updates the model card |
 
 **Build:** there is no compile step. `node tools/check.mjs` verifies that every file the app needs exists, JSON files are valid, and all module imports resolve. The `public/` folder *is* the production build.
 
@@ -148,6 +150,9 @@ Full step-by-step guide: **[docs/AI_MODEL_GUIDE.md](docs/AI_MODEL_GUIDE.md)**.
 **Training photos (not included in this repository; downloaded by `tools/dataset/fetch_datasets.py`):**
 - Sultana et al., *An extensive dataset for successful recognition of fresh and rotten fruits*, Data in Brief 44 (2022) 108552, doi:10.1016/j.dib.2022.108552 — via Hugging Face `Project-AgML/fresh_rotten_fruit_classification`, CC BY 4.0.
 - *Papaya Freshness Classification Dataset*, Mendeley Data, doi:10.17632/7mgj5bvp5h.1, CC BY 4.0.
-- *FruitVision: A Benchmark Dataset for Fresh, Rotten, and Formalin-mixed Fruit Detection*, Mendeley Data, doi:10.17632/xkbjx8959c.2, CC BY-NC-ND 4.0 (non-commercial; mango photos only).
+- *FruitVision: A Benchmark Dataset for Fresh, Rotten, and Formalin-mixed Fruit Detection*, Mendeley Data, doi:10.17632/xkbjx8959c.2, CC BY-NC-ND 4.0 (non-commercial; mango and some grape photos).
+- *FruitNet: Indian fruits dataset with quality (Good, Bad & Mixed quality)*, V. Meshram & K. Patil, Mendeley Data, doi:10.17632/b6fftwbr2v.3, CC BY 4.0.
+- *Fruit Quality Datasets (FruQ-DB / FruQ-multi)*, Zenodo record 7224690, CC BY 4.0 (frames from time-lapse videos).
+- *Fruits-360*, Mihai Oltean, github.com/fruits-360/fruits-360-100x100, CC BY-SA 4.0 (fruit recogniser).
 
 The photos were resized; no photos are redistributed. Font: Plus Jakarta Sans, SIL Open Font License 1.1 (`public/fonts/`). App code: MIT. TensorFlow.js and @teachablemachine/image: © Google LLC, Apache License 2.0 (see `public/vendor/NOTICE.txt`). This project is not affiliated with or endorsed by Google, TensorFlow, or any government, scientific or food-safety body.

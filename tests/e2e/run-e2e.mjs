@@ -114,7 +114,7 @@ async function noOverflow() {
 
 // ---------- create test images in the browser ----------
 await go('');
-const COLOURS = { red: [255, 0, 0], yellow: [255, 255, 0], blue: [60, 60, 255], cyan: [0, 255, 255], grey: [128, 128, 128], tie: [242, 191, 0], dark: [10, 10, 10] };
+const COLOURS = { red: [255, 0, 0], yellow: [255, 255, 0], blue: [60, 60, 255], cyan: [0, 255, 255], grey: [128, 128, 128], tie: [242, 191, 0], dark: [10, 10, 10], green: [0, 200, 0] };
 for (const [name, rgb] of Object.entries(COLOURS)) {
   const data = await page.evaluate((c) => {
     const cv = document.createElement('canvas'); cv.width = 400; cv.height = 300;
@@ -162,6 +162,8 @@ await check('E03', 'Broken model files -> clear error + retry button', async () 
 });
 
 await setPref('modelUrl', TEST_MODEL);
+// The colour test models were designed around a 75% threshold; keep tests independent of the real model card.
+await setPref('thresholdOverride', 0.75);
 
 await check('E04', 'Test model loads -> "AI ready"; classes listed on Model information', async () => {
   await go('#/model');
@@ -204,7 +206,7 @@ await check('E07', 'Cyan photo -> "Overripe Appearance" (banana)', async () => {
 await check('E08', 'Grey photo -> Uncertain because the model chose "Not a fruit"', async () => {
   const r = await scanFile('grey.png');
   assert(r.condition === 'uncertain', `got ${r.condition}`);
-  assert(r.text.includes('does not show a supported fruit'), 'reason missing');
+  assert(r.text.includes('does not show a fruit it knows'), 'reason missing');
 });
 
 await check('E09', 'Ambiguous photo -> Uncertain (low confidence), real score still shown', async () => {
@@ -387,7 +389,7 @@ await check('E22', 'Clear all history needs confirmation; cancel keeps data, con
 
 await check('E23', 'Every screen: no horizontal overflow at 360px, no banned safety claims', async () => {
   const banned = [/100% safe/i, /guaranteed (safe|rotten)/i, /certified safe/i, /no bacteria detected/i, /safe to eat\b(?!.*not)/i];
-  for (const r of ['#/', '#/scan', '#/history', '#/learn', '#/quiz', '#/dashboard', '#/fruits', '#/model', '#/settings', '#/evaluate', '#/learn/how-ai']) {
+  for (const r of ['#/', '#/scan', '#/history', '#/learn', '#/quiz', '#/dashboard', '#/fruits', '#/model', '#/settings', '#/evaluate', '#/learn/how-ai', '#/fruits/kiwi']) {
     await go(r);
     await page.evaluate(() => document.querySelectorAll('details').forEach((d) => { d.open = true; }));
     assert(await noOverflow(), `overflow on ${r}`);
@@ -458,6 +460,49 @@ await check('E28', 'Camera blocked/unavailable -> clear message, upload still of
   }
 });
 
+// ---------- two-model pipeline (freshness test model + recogniser test model) ----------
+await check('E30', 'Recogniser agrees with freshness model -> freshness answer + recogniser chip', async () => {
+  await setPref('modelUrl', TEST_MODEL);
+  await setPref('idModelUrl', '/__test__/pipeline-test-id-model/');
+  const r = await scanFile('red.png');
+  assert(r.condition === 'fresh', `got ${r.condition}`);
+  assert(await page.$('[data-testid=id-chip]'), 'no recogniser chip');
+  assert(/Fruit recogniser/.test(r.text) && /Apple/.test(r.text), 'recogniser info missing');
+});
+
+await check('E31', 'Fruit without freshness data (kiwi) -> "identified", tips shown, no freshness claim', async () => {
+  const r = await scanFile('green.png');
+  assert(r.condition === 'identified', `got ${r.condition}`);
+  assert(/Kiwi/.test(r.text), 'kiwi not named');
+  assert(/no freshness data/i.test(r.text), 'no-freshness explanation missing');
+  assert(await page.$('[data-testid=fruit-tips][open]'), 'fruit tips not open');
+  assert(!/Appears Fresh|Possible Signs of Spoilage/.test(r.label), 'freshness claimed for kiwi');
+  await page.screenshot({ path: join(SHOTS, '31-identified.png'), fullPage: true });
+});
+
+await check('E32', 'Recogniser says "Not a fruit" -> Uncertain', async () => {
+  const r = await scanFile('grey.png');
+  assert(r.condition === 'uncertain', `got ${r.condition}`);
+  assert(/does not show a fruit it knows/.test(r.text), 'reason missing');
+});
+
+await check('E33', 'Fruit library: 50+ fruits, search, detail page with tips', async () => {
+  await go('#/fruits');
+  await waitModel('AI ready');
+  const n = await page.$$eval('[data-testid=fruit-list] li', (els) => els.length);
+  assert(n >= 50, `only ${n} fruits listed`);
+  await page.type('#fruit-search', 'anaar');
+  await page.waitForFunction(() => document.querySelectorAll('[data-testid=fruit-list] li').length === 1);
+  await tap('[data-fruit=pomegranate]');
+  await page.waitForSelector('[data-testid=fruit-detail]');
+  const t = await page.evaluate(() => document.body.innerText);
+  assert(/Pomegranate/.test(t) && /Warning signs/i.test(t), 'detail/tips missing');
+  assert(await noOverflow(), 'overflow on detail page');
+  await page.screenshot({ path: join(SHOTS, '33-fruit-detail.png'), fullPage: true });
+  return `${n} fruits`;
+});
+await setPref('idModelUrl', '');
+
 // ---------- the real installed model (skipped if none is installed) ----------
 if (existsSync('public/models/fruit-freshness/model.json')) {
   await check('E29', 'Installed fruit model loads from the default location; every class is understood', async () => {
@@ -466,8 +511,9 @@ if (existsSync('public/models/fruit-freshness/model.json')) {
     await waitModel('AI ready');
     const info = await page.evaluate(() => document.body.innerText);
     assert(!info.includes('NOT RECOGNISED'), 'a class name is not understood by the app');
-    const n = await page.evaluate(async () => (await import('./js/model.js')).modelState.labels.length);
-    return `${n} classes`;
+    const st = await page.evaluate(async () => { const m = (await import('./js/model.js')).modelState; return { n: m.labels.length, id: m.id.status, idn: m.id.labels?.length }; });
+    if (existsSync('public/models/fruit-id/model.json')) assert(st.id === 'ready', `recogniser status ${st.id}`);
+    return `freshness ${st.n} classes, recogniser ${st.id} (${st.idn || 0} classes)`;
   });
 } else {
   console.log('SKIP E29 no trained model installed in public/models/fruit-freshness/');

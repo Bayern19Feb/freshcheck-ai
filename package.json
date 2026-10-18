@@ -1,6 +1,6 @@
 {
   "name": "freshcheck-ai",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "FreshCheck AI - a school science exhibition app that uses a browser-based image classifier to estimate visible fruit freshness.",
   "type": "module",
@@ -11,6 +11,8 @@
     "make:test-model": "node tools/make-test-model.mjs",
     "dataset": ".venv/Scripts/python tools/dataset/fetch_datasets.py",
     "train": "node tools/train/train.mjs && node tools/train/report.mjs",
+    "dataset:v2": ".venv/Scripts/python tools/dataset/fetch_v2.py",
+    "train:v2": "node tools/train/train_v2.mjs fresh && node tools/train/train_v2.mjs id && node tools/train/eval_pipeline.mjs && node tools/train/report_v2.mjs",
     "test": "node --test \"tests/unit/*.test.mjs\"",
     "test:e2e": "node tests/e2e/run-e2e.mjs",
     "check": "node tools/check.mjs && npm test && npm run test:e2e"

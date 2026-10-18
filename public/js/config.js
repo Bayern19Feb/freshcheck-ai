@@ -2,9 +2,11 @@
 // results) live in config/model-card.json so they can be updated without
 // touching code.
 
-export const APP_VERSION = '0.3.0';
+export const APP_VERSION = '0.4.0';
 
 export const MODEL_DIR = 'models/fruit-freshness/';
+export const MODEL_ID_DIR = 'models/fruit-id/';     // optional fruit-identifier model
+export const FALLBACK_ID_THRESHOLD = 0.6;
 export const MODEL_CARD_URL = 'config/model-card.json';
 
 // Used only if the model card does not provide a value.

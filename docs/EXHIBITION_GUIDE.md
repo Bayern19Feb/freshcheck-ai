@@ -24,7 +24,9 @@ A lot of fruit is thrown away at home because people are not sure if it is still
 - **Output:** a score for every class (they add up to 100%). The app shows the top class only if its score is above a **threshold**; otherwise it says **Uncertain — Inspect Manually**.
 
 ## How the model was trained
-**Starter model (17 Oct 2026):**
+**Version 2 (18 Oct 2026):** two models — a fruit recogniser (51 fruits) and a freshness checker (16 fruits, up to 500 fresh + 500 spoiled photos each) from 34,257 licensed photos; whole app 98.0% correct when answered on 2,691 unseen dataset photos, recogniser 95.3%. Details: MODEL_EVALUATION.md.
+
+**Earlier starter model (17 Oct 2026, replaced):**
 - Fruits and classes: Apple, Banana, Orange, Mango, Grapes, Strawberry, Guava, Papaya — each *Fresh* and *Spoiled* — plus *Other* (17 classes).
 - Training photos: 140 per class (280 for Other), plus mirrored copies.
 - Where the photos came from: public research datasets — Sultana et al. 2022 (CC BY 4.0), Papaya Freshness Classification Dataset (CC BY 4.0), FruitVision (CC BY-NC-ND 4.0, mango).

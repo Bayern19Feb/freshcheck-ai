@@ -1,6 +1,6 @@
 # Session Handoff — FreshCheck AI
 
-**Last session:** 3 — 17 Oct 2026 (v0.3.0, visual redesign). Read this first, then the newest entry in `PROJECT_NOTES.md`.
+**Last session:** 5 — 18 Oct 2026 (v0.4.0, 51 fruits, two AI models). Read this first, then the newest entry in `PROJECT_NOTES.md`.
 
 ## Online
 - Repository: https://github.com/Bayern19Feb/freshcheck-ai (public)
@@ -8,9 +8,10 @@
 
 ## What is working now
 - The complete app in `public/` (all screens, camera/upload, history, learning centre, quiz, evaluation tool, offline support).
-- **A starter model is installed** (`public/models/fruit-freshness/`): 17 classes = 8 fruits × Fresh/Spoiled + Other. It was trained from openly licensed public datasets with the Teachable Machine library.
-- Starter model test on 720 held-out dataset photos: **correct when answered 98.6%**, threshold 70% (chosen on validation photos). **Supported:** Apple, Orange, Mango, Grapes, Guava, Papaya. **Experimental:** Banana, Strawberry (one spoiled test photo each was called fresh). Report: `docs/MODEL_EVALUATION.md`.
-- Checks: `tools/check.mjs` passes; 22/22 unit tests; 29/29 browser tests.
+- **Two AI models installed:** fruit recogniser (`public/models/fruit-id/`, 51 fruits + Not a fruit) and freshness checker (`public/models/fruit-freshness/`, 16 fruits × Fresh/Spoiled + Other). The app shows freshness only when both agree.
+- Whole app on 2,691 dataset test photos: **98.0% correct when answered**, 13 spoiled shown as fresh; recogniser 95.3% top-1. Supported: Apple, Lime, Mango, Papaya, Strawberry; others Experimental. Report: `docs/MODEL_EVALUATION.md`.
+- Fruit library (51 fruits, search incl. Hindi names, tips).
+- Checks: `tools/check.mjs` passes; 31/31 unit tests; 33/33 browser tests.
 
 ## What is incomplete
 1. Not tested with **own phone photos** of real fruit, so real-world accuracy is unknown.
@@ -46,9 +47,9 @@ npm test                    # unit tests
 npm run make:test-model     # once, before browser tests
 npm run test:e2e            # browser tests
 npm run check               # everything
-# rebuilding the starter model (needs the .venv, see AI_MODEL_GUIDE.md §12)
-npm run dataset             # ~4 GB download into data/
-npm run train               # trains, installs, writes MODEL_EVALUATION.md
+# rebuilding the v2 models (needs the .venv, see AI_MODEL_GUIDE.md §13)
+npm run dataset:v2          # ~5 GB download into data/ (resumable)
+npm run train:v2            # trains both models (~40 min), tests them, writes MODEL_EVALUATION.md
 ```
 
 ## Manual steps the student must do

@@ -5,7 +5,7 @@ Statuses: **Not Started · In Progress · Implemented · Tested · Verified · B
 - *Implemented* = code exists. *Tested* = automated or manual test passed (evidence given). *Verified* = confirmed on a real phone / deployed site / with the real model.
 - Nothing is **Verified** yet: no real phone test, no deployment, no phone-photo evaluation.
 
-Last updated: 17 Oct 2026 (session 2).
+Last updated: 18 Oct 2026 (session 5).
 
 | # | Feature | Status | Evidence / notes |
 |---|---|---|---|
@@ -19,7 +19,7 @@ Last updated: 17 Oct 2026 (session 2).
 | 8 | Image preprocessing & validation (C) | Tested | E11, E12; orientation handling Not Verified on a phone |
 | 9 | Model loading states (loading / ready / error + retry) | Tested | E02, E03, E04 |
 | 10 | Genuine inference pipeline (D) | Tested | E05–E11 with **pipeline test model** |
-| 11 | Trained fruit model (starter, public datasets) | Tested | 17 classes; E29 loads it; 720 test photos → MODEL_EVALUATION.md. Own-photo model: Not Started |
+| 11 | Trained models v2 (recogniser 51 fruits + freshness 16 fruits) | Tested | E29 loads both; 2,691 + 4,963 test photos → MODEL_EVALUATION.md. Own-photo model: Not Started |
 | 12 | Confidence display + explanation | Tested | E05, E06, E09 (shown value = model maths) |
 | 13 | Uncertain handling (threshold, gap, reject class, poor photo, mismatch) | Tested | Unit tests + E08–E11 |
 | 14 | Threshold chosen from validation data | Tested | 70% from 360 dataset validation photos (MODEL_EVALUATION.md §1) — not yet with phone photos |
@@ -32,7 +32,7 @@ Last updated: 17 Oct 2026 (session 2).
 | 21 | Quiz (J) | Tested | E18, E19, unit tests |
 | 22 | Settings & information (K) | Tested | E23 renders; threshold/model-location controls Implemented, not automatically tested |
 | 23 | Model information screen | Tested | E04 |
-| 24 | Fruit support section (8 fruits) | Tested | E17 |
+| 24 | Fruit library (51 fruits, search, detail, tips) | Tested | E17, E33 |
 | 25 | Evaluation tool (confusion matrix, per-fruit, thresholds) | Tested | E21 + unit tests |
 | 26 | Per-fruit evaluation of the model | Tested (dataset photos) | 6 passed, Banana/Strawberry Experimental; phone-photo evaluation Not Started |
 | 27 | Privacy notice, local-only storage | Implemented | Text present; no network upload code exists |
@@ -46,3 +46,4 @@ Last updated: 17 Oct 2026 (session 2).
 | 35 | Performance measured on a phone | Not Started | App shows measured load/analysis times; none recorded yet |
 | 36 | Documentation set (14 files) | Implemented | Must be updated after model training |
 | 37 | Exhibition materials (poster, script, Q&A, experiment log) | Implemented | Results sections intentionally empty until real tests |
+| 38 | Two-model logic (agree / identified-only / disagree) | Tested | Unit tests (v2.test.mjs) + E30–E32 |

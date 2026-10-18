@@ -1,8 +1,8 @@
 // Shared app state: the model card (thresholds + evaluation records),
 // the active thresholds and the fruit-support map.
 
-import { MODEL_CARD_URL, FALLBACK_THRESHOLDS, FALLBACK_MIN_MARGIN } from './config.js';
-import { fruitSupport } from './fruits.js';
+import { MODEL_CARD_URL, FALLBACK_THRESHOLDS, FALLBACK_MIN_MARGIN, FALLBACK_ID_THRESHOLD } from './config.js';
+import { fruitSupport, describeLabels } from './fruits.js';
 import { getPref } from './prefs.js';
 import { modelState } from './model.js';
 
@@ -39,9 +39,22 @@ export function getMinMargin() {
   return typeof card?.minMargin === 'number' ? card.minMargin : FALLBACK_MIN_MARGIN;
 }
 
-/** Support rows for the eight target fruits, based on the loaded model + model card. */
+/** Minimum identifier score before the app trusts which fruit it is. */
+export function getIdThreshold() {
+  return typeof card?.idThreshold === 'number' ? card.idThreshold : FALLBACK_ID_THRESHOLD;
+}
+
+/** Support rows for every fruit, based on the loaded models + model card. */
 export function getSupport() {
-  return fruitSupport(modelState.status === 'ready' ? modelState.labels : null, card);
+  const ready = modelState.status === 'ready';
+  const idLabels = ready && modelState.id?.status === 'ready' ? modelState.id.labels : null;
+  return fruitSupport(ready ? modelState.labels : null, card, idLabels);
+}
+
+/** Fruit ids that the loaded freshness model has classes for. */
+export function getFreshFruits() {
+  if (modelState.status !== 'ready') return new Set();
+  return new Set(Object.keys(describeLabels(modelState.labels).fruitsInModel));
 }
 
 export function getSupportMap() {

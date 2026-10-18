@@ -119,3 +119,28 @@ See SESSION_HANDOFF.md.
 - Live app: https://bayern19feb.github.io/freshcheck-ai/ — checked in headless Chrome: all files 200, AI ready, real inference, service worker active, no installability errors.
 - Android package built with PWABuilder's packaging service (`tools/android/make-apk.mjs`, package id `io.github.bayern19feb.freshcheck`, new signing key). APK published at `public/download/FreshCheck-AI.apk`; signing key + passwords kept only in git-ignored `android-package/` — **back it up**; it is needed for any future update of the same app.
 - Not yet done: Digital Asset Links. Without `https://bayern19feb.github.io/.well-known/assetlinks.json` (needs a repo named `Bayern19Feb.github.io`), the APK shows a small browser address bar at the top. APK not yet tested on a real phone.
+
+---
+
+## Session 5 — 18 Oct 2026: 51 fruits, 500 + 500 photos, two AI models
+
+**Goal (user):** "at least 50 fruits … 500 images of good and rotten … make it an actual great app".
+
+**What was possible honestly:** licensed fresh/rotten photo sets exist for only ~16 fruits; scraping web images would break licences and the project brief. So: a 51-fruit **recogniser** (Fruits-360 + real photos) and a 16-fruit **freshness checker**. Fruits without freshness data are named, never judged.
+
+### Work completed
+- Sources checked via their APIs: FruitNet (CC BY 4.0, ~1,100 good/bad each of 6 Indian fruits), FruQ-multi (CC BY 4.0, time-lapse frames), Fruits-360 (CC BY-SA 4.0, GitHub), plus v1 sources. A second Mendeley "fresh and rotten" dataset (bdd69gyhv8) turned out to be the same Sultana images, so it was not used.
+- `fetch_v2.py`: 34,257 photos; 11 fruits at 500/500; splits by near-duplicate groups or contiguous video/rotation frames.
+- Trained both models with the Teachable Machine library (30 epochs, batch 32, 128 units; mirrored copies for freshness). Freshness: 13 min; recogniser: 22 min.
+- End-to-end evaluation with the app's own code: whole app 98.0% correct when answered on 2,691 freshness test photos (answered 93.0%), 13 spoiled shown as fresh; recogniser 95.3% top-1 (94.3% on real photos).
+- Supported (passed): Apple, Lime, Mango, Papaya, Strawberry. Experimental: Banana (5 spoiled→fresh), Orange (4), Grapes, Guava, Jujube, Pomegranate (1 each); Peach, Pear, Persimmon, Tomato, Watermelon (single time-lapse source).
+
+### Problems and solutions
+1. Remote-zip listing hung: Zenodo ignored the first range request and started a 4.6 GB download → stream=True + 206 check; curl redirect probe uses `-r 0-0`.
+2. Mendeley blocks Python's HTTP client → JSON via curl.
+3. Sequential range reads too slow → 12 parallel readers; Zenodo answered HTTP 429 → retry/back-off, then download the FruQ zip once in a single stream.
+4. Model information view crashed before the recogniser loaded (null labels) → optional chaining; caught by browser tests E04/E29.
+5. Browser tests depended on the model card threshold → tests pin a 75% device threshold for the colour test models.
+
+### Current state
+v0.4.0; 31/31 unit, 33/33 browser checks. Not yet tested on phone photos.

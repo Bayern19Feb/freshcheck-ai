@@ -12,7 +12,7 @@ To build a phone app that uses artificial intelligence to give a **visual estima
 
 ### Materials and software used
 - Android smartphone with Chrome
-- 3,600 labelled photos of 8 fruits (fresh and spoiled) from public research datasets: Sultana et al. 2022 (CC BY 4.0), Papaya Freshness Dataset (CC BY 4.0), FruitVision (CC BY-NC-ND 4.0)
+- 34,257 labelled photos from six public research datasets (Sultana et al. 2022, FruitNet, Papaya Freshness, FruQ, FruitVision, Fruits-360) — 51 fruits to recognise, 16 fruits with up to 500 fresh + 500 spoiled photos each
 - Real fruits for testing and the live demo
 - Google Teachable Machine (free) — to train the AI
 - TensorFlow.js (free, open-source) — to run the AI on the phone
@@ -29,23 +29,19 @@ To build a phone app that uses artificial intelligence to give a **visual estima
 📷 Photo → ✂️ centre square, 224 × 224 pixels → 🧠 neural network (MobileNet + our training) → 📊 score for each class → ✅ top class **or** ❔ "Uncertain"
 
 ### Results and observations
-Tested on **720 dataset photos the model never saw** (confidence threshold 70%, chosen on separate validation photos):
+Two AIs: a **fruit recogniser** (51 fruits) and a **freshness checker** (16 fruits). Tested on photos they never saw during training (thresholds chosen on separate validation photos):
 
-| Fruit | Test photos | Correct when answered | Spoiled shown as fresh | Status |
-|---|---|---|---|---|
-| Apple | 80 | 96.2% | 0 | Supported |
-| Banana | 80 | 98.8% | 1 | Experimental |
-| Orange | 80 | 100% | 0 | Supported |
-| Mango | 80 | 97.5% | 0 | Supported |
-| Grapes | 80 | 98.8% | 0 | Supported |
-| Strawberry | 80 | 98.8% | 1 | Experimental |
-| Guava | 80 | 100% | 0 | Supported |
-| Papaya | 80 | 100% | 0 | Supported |
-| **All** | **720** | **98.6%** | **2** | |
+| Test | Photos | Result |
+|---|---|---|
+| Whole app, freshness (16 fruits) | 2,691 | **98.0% correct when it answered**; 93% answered, 7% "Uncertain" |
+| Spoiled fruit shown as fresh | ~1,350 spoiled | 13 (about 1%) — most were bananas and oranges |
+| Fruit recogniser (51 fruits + not a fruit) | 4,963 | **95.3%** named correctly (94.3% on real photos) |
+
+Supported freshness fruits (passed all rules): Apple, Lime, Mango, Papaya, Strawberry. Others are marked Experimental.
 
 Observations:
-- The two mistakes were a banana with only a few dark patches and a strawberry that looked whole but was leaking juice — spoilage that is hard to see.
-- Test photos came from the same datasets as the training photos, so real phone photos may score lower. *(Add your own phone-photo results here.)*
+- Spoiled bananas with only a few dark patches are the hardest — ripe and rotten bananas look alike.
+- Test photos come from the same datasets as the training photos, so real phone photos may score lower. *(Add your own phone-photo results here.)*
 
 ### Benefits
 - Helps people look carefully at fruit and use ripe fruit instead of throwing it away

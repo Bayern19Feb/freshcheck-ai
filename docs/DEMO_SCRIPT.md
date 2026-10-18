@@ -19,7 +19,7 @@
 *If the result is Uncertain:* "The AI says **Uncertain**. That's on purpose — when its score is below our threshold, it doesn't guess. It tells you to check the fruit yourself."
 
 **1:05 — How the AI works**
-"I trained the AI with **Google Teachable Machine** using 3,600 labelled photos of fresh and spoiled fruit from public research datasets. The computer learned the patterns of colour and texture. The AI runs **on the phone** with TensorFlow.js, so the photo is never uploaded. I tested it with 720 photos it had never seen, and it was correct 98.6% of the time when it gave an answer — but those were dataset photos, so real fruit can be harder."
+"My app has **two AIs**. One recognises **51 fruits**; the other checks whether **16 fruits** look fresh or spoiled. I trained them with the Teachable Machine library on more than 34,000 photos from public research datasets. They run **on the phone**, so the photo is never uploaded. On photos they had never seen, the app was right 98% of the time when it gave an answer, and it named the fruit correctly 95% of the time — but those were dataset photos, so real fruit can be harder."
 
 **1:30 — Benefits**
 "It's free, private, works offline, and it teaches people to use ripe fruit instead of wasting it. There's also a learning centre and a quiz."

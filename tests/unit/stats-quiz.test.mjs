@@ -11,7 +11,7 @@ test('stats are counted only from records', () => {
     { conditionId: 'spoiled', detectedFruitId: 'banana' },
   ]);
   assert.equal(s.total, 3);
-  assert.deepEqual(s.byCondition, { fresh: 1, overripe: 0, spoiled: 1, uncertain: 1 });
+  assert.deepEqual(s.byCondition, { fresh: 1, overripe: 0, spoiled: 1, identified: 0, uncertain: 1 });
   assert.deepEqual(s.mostScanned, { fruitId: 'banana', count: 2 });
   assert.equal(s.manualOnly, 1);
   assert.equal(s.helpfulYes, 1);

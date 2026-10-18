@@ -34,7 +34,8 @@ export async function render(main) {
         <h2 id="by-fruit">Scans by fruit</h2>
         <p class="small muted">Uses the fruit the model detected, or your selection when the model did not identify a fruit${s.manualOnly ? ` (${s.manualOnly} scans)` : ''}.</p>
         <div class="table-wrap"><table><thead><tr><th scope="col">Fruit</th><th scope="col">Scans</th></tr></thead><tbody>
-          ${FRUITS.map((f) => html`<tr><td>${f.emoji} ${f.name}</td><td>${s.byFruit[f.id] || 0}</td></tr>`)}
+          ${FRUITS.filter((f) => s.byFruit[f.id]).map((f) => html`<tr><td>${f.emoji} ${f.name}</td><td>${s.byFruit[f.id]}</td></tr>`)}
+          ${Object.keys(s.byFruit).length === 0 ? html`<tr><td colspan="2" class="muted">No fruits scanned yet</td></tr>` : ''}
         </tbody></table></div>
       </section>
 

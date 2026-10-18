@@ -1,24 +1,25 @@
-// Fruit and condition definitions, plus the parser that maps the class names
-// inside a Teachable Machine model to fruits and freshness conditions.
+// Fruit and condition definitions, plus the parsers that map the class names
+// inside the Teachable Machine models to fruits and freshness conditions.
 //
-// Naming convention for model classes (see docs/AI_MODEL_GUIDE.md):
-//   "<Fruit> - <Condition>"   e.g. "Banana - Fresh", "Apple - Spoiled"
-//   "Not a fruit"             (recommended "reject" class)
-// Matching is case-insensitive and accepts the aliases listed below.
+// Two models (see docs/AI_MODEL_GUIDE.md):
+//   freshness model classes: "<Fruit> - <Condition>"  e.g. "Banana - Fresh", "Apple - Spoiled", plus "Other"
+//   identifier model classes: "<Fruit>"               e.g. "Kiwi", "Banana", plus "Not a fruit"
+// Matching is case-insensitive and accepts the aliases in fruit-data.js.
 
-export const FRUITS = [
-  { id: 'apple', name: 'Apple', emoji: '🍎', aliases: ['apple', 'apples'] },
-  { id: 'banana', name: 'Banana', emoji: '🍌', aliases: ['banana', 'bananas'] },
-  { id: 'orange', name: 'Orange', emoji: '🍊', aliases: ['orange', 'oranges'] },
-  { id: 'mango', name: 'Mango', emoji: '🥭', aliases: ['mango', 'mangoes', 'mangos'] },
-  { id: 'grapes', name: 'Grapes', emoji: '🍇', aliases: ['grapes', 'grape'] },
-  { id: 'strawberry', name: 'Strawberry', emoji: '🍓', aliases: ['strawberry', 'strawberries'] },
-  { id: 'guava', name: 'Guava', emoji: '🍐', aliases: ['guava', 'guavas'] },
-  { id: 'papaya', name: 'Papaya', emoji: '🍈', aliases: ['papaya', 'papayas'] },
-];
+import { FRUIT_LIST, GROUPS } from './fruit-data.js';
 
-// Condition ids used by the model labels. "uncertain" is never a model class;
-// the app produces it when the model's answer is not reliable enough.
+const plural = (w) => (w.endsWith('y') ? `${w.slice(0, -1)}ies` : w.endsWith('o') || w.endsWith('h') ? `${w}es` : `${w}s`);
+
+export const FRUITS = FRUIT_LIST.map(([id, name, emoji, group, hindi, aliases, note]) => {
+  const base = name.toLowerCase().replace(/\s*\(.*\)\s*/, '').trim();
+  const all = new Set([id, id.replace(/-/g, ' '), base, plural(base), ...aliases.map((a) => a.toLowerCase())]);
+  return { id, name, emoji, group, hindi, note, aliases: [...all] };
+});
+
+export { GROUPS };
+
+// Condition ids used by the model labels. "uncertain" and "identified" are never
+// model classes; the app produces them.
 export const CONDITIONS = {
   fresh: { id: 'fresh', label: 'Appears Fresh', short: 'Fresh', tone: 'good', icon: 'check',
     aliases: ['fresh', 'good', 'healthy'] },
@@ -26,6 +27,8 @@ export const CONDITIONS = {
     aliases: ['overripe', 'over-ripe', 'over ripe', 'very ripe'] },
   spoiled: { id: 'spoiled', label: 'Possible Signs of Spoilage', short: 'Spoilage signs', tone: 'bad', icon: 'alert',
     aliases: ['spoiled', 'spoilt', 'rotten', 'bad', 'mouldy', 'moldy', 'decayed'] },
+  identified: { id: 'identified', label: 'Fruit Identified — Check Freshness Yourself', short: 'Identified only', tone: 'neutral', icon: 'info',
+    aliases: [] },
   uncertain: { id: 'uncertain', label: 'Uncertain — Inspect Manually', short: 'Uncertain', tone: 'neutral', icon: 'question',
     aliases: [] },
 };
@@ -34,23 +37,27 @@ export const CONDITIONS = {
 const REJECT_ALIASES = ['not a fruit', 'not fruit', 'unsupported', 'other', 'background', 'unknown', 'none', 'nothing'];
 
 const norm = (s) => String(s).toLowerCase().replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim();
+const findFruit = (text) => FRUITS.find((f) => f.aliases.includes(text)) || null;
 
 export function getFruit(id) {
   return FRUITS.find((f) => f.id === id) || null;
 }
 
+const isReject = (text) => REJECT_ALIASES.includes(text.replace(/-/g, ' '));
+
 /**
- * Parse one model class name.
+ * Parse one freshness-model class name.
  * Returns { raw, kind: 'fruit-condition', fruitId, conditionId }
  *      or { raw, kind: 'reject' }
  *      or { raw, kind: 'unknown' }   (the app does not understand this class)
  */
 export function parseLabel(raw) {
   const text = norm(raw);
-  if (REJECT_ALIASES.includes(text.replace(/-/g, ' '))) return { raw, kind: 'reject' };
+  if (isReject(text)) return { raw, kind: 'reject' };
 
   // Split on " - ", ":", "/", "|" or the last space if nothing else.
-  let parts = text.split(/\s*[-:|/]\s*/).filter(Boolean);
+  let parts = text.split(/\s+-\s+|\s*[:|/]\s*/).filter(Boolean);
+  if (parts.length === 1) parts = text.split(/\s*-\s*/).filter(Boolean);
   if (parts.length === 1) {
     const i = text.lastIndexOf(' ');
     parts = i > 0 ? [text.slice(0, i), text.slice(i + 1)] : parts;
@@ -58,17 +65,32 @@ export function parseLabel(raw) {
   if (parts.length < 2) return { raw, kind: 'unknown' };
 
   const tryPair = (a, b) => {
-    const fruit = FRUITS.find((f) => f.aliases.includes(a));
+    const fruit = findFruit(a);
     const cond = Object.values(CONDITIONS).find((c) => c.aliases.includes(b));
     return fruit && cond ? { raw, kind: 'fruit-condition', fruitId: fruit.id, conditionId: cond.id } : null;
   };
-  const a = parts[0];
-  const b = parts.slice(1).join(' ');
-  return tryPair(a, b) || tryPair(b, a) || { raw, kind: 'unknown' };
+  for (let i = 1; i < parts.length; i++) {
+    const a = parts.slice(0, i).join(' ');
+    const b = parts.slice(i).join(' ');
+    const hit = tryPair(a, b) || tryPair(b, a);
+    if (hit) return hit;
+  }
+  return { raw, kind: 'unknown' };
 }
 
 /**
- * Summarise what a model's labels cover.
+ * Parse one identifier-model class name ("Kiwi", "Not a fruit").
+ * Returns { raw, kind: 'fruit', fruitId } | { raw, kind: 'reject' } | { raw, kind: 'unknown' }
+ */
+export function parseFruitName(raw) {
+  const text = norm(raw);
+  if (isReject(text)) return { raw, kind: 'reject' };
+  const fruit = findFruit(text) || findFruit(text.replace(/\s*\(.*\)\s*/, '').trim());
+  return fruit ? { raw, kind: 'fruit', fruitId: fruit.id } : { raw, kind: 'unknown' };
+}
+
+/**
+ * Summarise what a freshness model's labels cover.
  * Returns { parsed[], fruitsInModel: {fruitId: [conditionIds]}, hasReject, unknownLabels[] }
  */
 export function describeLabels(labels) {
@@ -86,16 +108,29 @@ export function describeLabels(labels) {
   };
 }
 
+/** Summarise an identifier model's labels. */
+export function describeIdLabels(labels) {
+  const parsed = labels.map(parseFruitName);
+  return {
+    parsed,
+    fruits: parsed.filter((p) => p.kind === 'fruit').map((p) => p.fruitId),
+    hasReject: parsed.some((p) => p.kind === 'reject'),
+    unknownLabels: parsed.filter((p) => p.kind === 'unknown').map((p) => p.raw),
+  };
+}
+
 /**
- * Support status for each of the eight target fruits.
- *  - 'not-in-model'  : the loaded model has no classes for this fruit
+ * Freshness support status for every fruit.
+ *  - 'not-in-model'  : the freshness model has no classes for this fruit
  *  - 'experimental'  : the model has classes, but evaluation has not passed
  *  - 'supported'     : the model has classes AND the model card records a
  *                      passed evaluation on independent test images
- *  - 'unknown'       : no model is loaded yet
+ *  - 'unknown'       : no freshness model is loaded yet
+ * `identifiable` is true/false when an identifier model is loaded, else null.
  */
-export function fruitSupport(modelLabels, modelCard) {
+export function fruitSupport(modelLabels, modelCard, idLabels = null) {
   const info = modelLabels ? describeLabels(modelLabels) : null;
+  const idInfo = idLabels ? describeIdLabels(idLabels) : null;
   return FRUITS.map((fruit) => {
     const evaluation = modelCard?.fruits?.[fruit.id] || {};
     const conditions = info?.fruitsInModel[fruit.id] || [];
@@ -104,13 +139,14 @@ export function fruitSupport(modelLabels, modelCard) {
     else if (!conditions.length) status = 'not-in-model';
     else if (evaluation.evaluation === 'passed') status = 'supported';
     else status = 'experimental';
-    return { fruit, status, conditions, evaluation };
+    const identifiable = idInfo ? idInfo.fruits.includes(fruit.id) : null;
+    return { fruit, status, conditions, evaluation, identifiable };
   });
 }
 
 export const SUPPORT_TEXT = {
   'unknown': { label: 'Model not loaded', tone: 'neutral' },
-  'not-in-model': { label: 'Not supported yet', tone: 'neutral' },
-  'experimental': { label: 'Experimental', tone: 'warn' },
-  'supported': { label: 'Supported (evaluated)', tone: 'good' },
+  'not-in-model': { label: 'No freshness check', tone: 'neutral' },
+  'experimental': { label: 'Freshness: experimental', tone: 'warn' },
+  'supported': { label: 'Freshness: supported', tone: 'good' },
 };

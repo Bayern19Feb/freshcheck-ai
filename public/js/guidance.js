@@ -33,6 +33,16 @@ export const GUIDANCE = {
     ],
     caution: 'The model could be wrong. A fruit with natural spots or marks may also be labelled this way.',
   },
+  identified: {
+    title: 'The AI knows this fruit, but cannot check its freshness yet',
+    summary: 'The fruit recogniser named the fruit, but the freshness checker was never trained on photos of this fruit, so the app does not guess whether it is fresh.',
+    steps: [
+      'Use the tips below for this fruit: look, smell and gently feel it.',
+      'If you are a child, ask an adult to help you decide.',
+      'Do not eat fruit with mould, leaking juice or a strange smell.',
+    ],
+    caution: 'Naming a fruit is not the same as checking it. Always inspect fruit yourself.',
+  },
   uncertain: {
     title: 'The AI is not sure',
     summary: 'The result is inconclusive, so the app is not making a guess.',
@@ -54,5 +64,6 @@ export const FEATURES = {
   fresh: ['Even, bright colour typical for the fruit', 'Smooth, tight-looking skin', 'No fuzzy patches or large dark areas'],
   overripe: ['Darker or deeper colour than usual', 'Many brown or dark spots (for example banana "sugar spots")', 'Slightly wrinkled or soft-looking skin'],
   spoiled: ['Fuzzy patches that look like mould (white, green, blue or black)', 'Large dark, sunken or wet-looking areas', 'Shrivelled, split or leaking skin'],
+  identified: ['Shape, colour and texture typical of this fruit'],
   uncertain: ['The photo did not match any category clearly enough'],
 };

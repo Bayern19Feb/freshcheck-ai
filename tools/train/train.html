@@ -47,12 +47,12 @@ const toBase64 = (buf) => {
   return btoa(s);
 };
 
-window.runTraining = async ({ rows, labels, params, flipAugment, seed }) => {
+window.runTraining = async ({ rows, labels, params, flipAugment, seed, imageRoot = '/data/images/', modelName = 'freshcheck-starter' }) => {
   const t0 = performance.now();
   log(`TF.js ${tf.version.tfjs}, backend ${tf.getBackend()}`);
   const model = await tmImage.createTeachable(
     { tfjsVersion: tf.version.tfjs, tmVersion: '2.4.x', packageVersion: '0.8.5', packageName: '@teachablemachine/image',
-      modelName: 'freshcheck-starter', imageSize: IMAGE_SIZE },
+      modelName, imageSize: IMAGE_SIZE },
     { version: 2, alpha: 0.35 },
   );
   model.setLabels(labels);
@@ -63,11 +63,11 @@ window.runTraining = async ({ rows, labels, params, flipAugment, seed }) => {
   const train = rows.filter((r) => r.split === 'train');
   let n = 0;
   for (const r of train) {
-    const img = await loadImage(`/data/images/${encodeURI(r.file)}`);
+    const img = await loadImage(`${imageRoot}${encodeURI(r.file)}`);
     const idx = labels.indexOf(r.class);
     await model.addExample(idx, cropTo(img, IMAGE_SIZE));
     if (flipAugment) await model.addExample(idx, cropTo(img, IMAGE_SIZE, true));
-    if (++n % 200 === 0) log(`  added ${n}/${train.length} training photos`);
+    if (++n % 1000 === 0) log(`  added ${n}/${train.length} training photos`);
   }
   log(`Added ${n} training photos (${flipAugment ? 'plus mirrored copies' : 'no augmentation'})`);
 
@@ -77,7 +77,7 @@ window.runTraining = async ({ rows, labels, params, flipAugment, seed }) => {
   await model.train(params, {
     onEpochEnd: (epoch, logs) => {
       history.push({ epoch: epoch + 1, loss: logs.loss, acc: logs.acc, val_loss: logs.val_loss, val_acc: logs.val_acc });
-      if ((epoch + 1) % 5 === 0) log(`  epoch ${epoch + 1}/${params.epochs}  loss ${logs.loss.toFixed(3)}  val_acc ${(logs.val_acc ?? 0).toFixed(3)}`);
+      if ((epoch + 1) % 5 === 0 || epoch === 0) log(`  epoch ${epoch + 1}/${params.epochs}  loss ${logs.loss.toFixed(3)}  val_acc ${(logs.val_acc ?? 0).toFixed(3)}`);
     },
   });
   log(`Trained in ${Math.round(performance.now() - t1)} ms`);
@@ -86,7 +86,7 @@ window.runTraining = async ({ rows, labels, params, flipAugment, seed }) => {
   const scored = [];
   const held = rows.filter((r) => r.split !== 'train');
   for (const r of held) {
-    const img = await loadImage(`/data/images/${encodeURI(r.file)}`);
+    const img = await loadImage(`${imageRoot}${encodeURI(r.file)}`);
     const preds = await model.predict(img);
     scored.push({ file: r.file, class: r.class, split: r.split,
       scores: preds.map((p) => ({ className: p.className, probability: p.probability })) });
@@ -110,7 +110,7 @@ window.runTraining = async ({ rows, labels, params, flipAugment, seed }) => {
   }));
   const metadata = {
     tfjsVersion: tf.version.tfjs, tmVersion: '2.4.x', packageVersion: '0.8.5', packageName: '@teachablemachine/image',
-    timeStamp: new Date().toISOString(), userMetadata: {}, modelName: 'freshcheck-starter', labels, imageSize: IMAGE_SIZE,
+    timeStamp: new Date().toISOString(), userMetadata: {}, modelName, labels, imageSize: IMAGE_SIZE,
   };
   files['metadata.json'] = JSON.stringify(metadata, null, 2);
   return { files, scored, history, backend: tf.getBackend(), totalMs: Math.round(performance.now() - t0) };

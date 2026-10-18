@@ -1,12 +1,31 @@
 // Result card shared by the Scan screen and the History details screen.
 
 import { html, raw, icon, pct, formatDate } from '../ui.js';
-import { getFruit } from '../fruits.js';
+import { getFruit, GROUPS } from '../fruits.js';
 import { conditionInfo, REASON_TEXT } from '../interpret.js';
 import { GUIDANCE, ALWAYS_NOTE, FEATURES } from '../guidance.js';
 import { QUALITY_TEXT } from '../image.js';
 
 const CONDITION_ICON = { good: 'check', warn: 'clock', bad: 'alert', neutral: 'question' };
+const ICON_FOR = (cond) => (cond.id === 'identified' ? 'info' : CONDITION_ICON[cond.tone]);
+
+/** "How to check this fruit yourself" panel for a known fruit. */
+export function fruitTips(fruit, open = false) {
+  if (!fruit) return '';
+  const g = GROUPS[fruit.group];
+  return html`
+    <details ${open ? 'open' : ''} data-testid="fruit-tips">
+      <summary><span class="topic-emoji" aria-hidden="true">${fruit.emoji}</span>How to check a ${fruit.name.toLowerCase()} yourself</summary>
+      <div class="stack">
+        ${fruit.note ? html`<p class="note good" style="margin:0">${icon('info')}<span>${fruit.note}</span></p>` : ''}
+        <div class="grid-2">
+          <div><p class="eyebrow">Usually fine</p><ul class="steps">${g.fresh.map((t) => html`<li>${t}</li>`)}</ul></div>
+          <div><p class="eyebrow" style="color:var(--bad)">Warning signs</p><ul class="steps">${g.spoiled.map((t) => html`<li>${t}</li>`)}</ul></div>
+        </div>
+        <p class="small muted" style="margin:0"><strong>Storage:</strong> ${g.storage}</p>
+      </div>
+    </details>`;
+}
 
 /** Circular gauge showing the model confidence, with the threshold marked. */
 function gauge(confidence, threshold, tone) {
@@ -45,8 +64,8 @@ export function resultCard(record, opts = {}) {
     <section class="card stack" aria-labelledby="result-title" data-testid="result">
       <h2 id="result-title" class="visually-hidden">Result</h2>
       <div class="verdict ${cond.tone}" data-condition="${cond.id}">
-        <i aria-hidden="true">${icon(CONDITION_ICON[cond.tone])}</i>
-        <div><span>${cond.label}</span><small>AI visual estimate for the whole photo</small></div>
+        <i aria-hidden="true">${icon(ICON_FOR(cond))}</i>
+        <div><span>${cond.label}</span><small>${cond.id === 'identified' && detected ? `${detected.emoji} ${detected.name} — no freshness data for this fruit yet` : 'AI visual estimate for the whole photo'}</small></div>
       </div>
       ${record.experimental ? html`<p class="note warn">${icon('flask')}<span><strong>Experimental fruit.</strong> This fruit has not yet passed testing on independent photos, so treat this result with extra care.</span></p>` : ''}
 
@@ -63,7 +82,8 @@ export function resultCard(record, opts = {}) {
 
       <div class="facts">
         <span class="chip">${icon('cpu', 'inline-icon')} Detected fruit: ${detected ? detected.name : 'Not identified'}</span>
-        ${detected ? html`<span class="chip">Fruit score <small>(model)</small> ${pct(record.fruitConfidence)}</span>` : ''}
+        ${record.idConfidence !== null && record.idConfidence !== undefined ? html`<span class="chip" data-testid="id-chip">Fruit recogniser <small>(${record.idTopClass})</small> ${pct(record.idConfidence)}</span>`
+          : detected ? html`<span class="chip">Fruit score <small>(model)</small> ${pct(record.fruitConfidence)}</span>` : ''}
         ${chosen ? html`<span class="chip">Your selection: ${chosen.emoji} ${chosen.name}</span>` : ''}
         <span class="chip">Top class: <code>${record.topClass}</code></span>
         ${opts.showDate ? html`<span class="chip">${icon('clock', 'inline-icon')} ${formatDate(record.createdAt)}</span>` : ''}
@@ -87,6 +107,8 @@ export function resultCard(record, opts = {}) {
         <ol class="guide">${guide.steps.map((s) => html`<li>${s}</li>`)}</ol>
         <p class="note warn" style="margin-top:12px">${icon('shield')}<span>${guide.caution}</span></p>
       </div>
+
+      ${fruitTips(detected, cond.id === 'identified')}
 
       <details>
         <summary><span class="topic-emoji" aria-hidden="true">🔍</span>What does the model look at?</summary>

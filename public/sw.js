@@ -4,7 +4,7 @@
 //   when online, and the cached copy when offline.
 // Bump CACHE_VERSION whenever app files change.
 
-const CACHE_VERSION = 'freshcheck-v0.3.0';
+const CACHE_VERSION = 'freshcheck-v0.4.0';
 const APP_FILES = [
   './',
   'index.html',
@@ -18,7 +18,7 @@ const APP_FILES = [
   'vendor/tf.min.js',
   'vendor/teachablemachine-image.min.js',
   'js/main.js', 'js/ui.js', 'js/state.js', 'js/config.js', 'js/prefs.js', 'js/db.js',
-  'js/fruits.js', 'js/interpret.js', 'js/guidance.js', 'js/stats.js', 'js/quiz.js',
+  'js/fruits.js', 'js/fruit-data.js', 'js/interpret.js', 'js/guidance.js', 'js/stats.js', 'js/quiz.js',
   'js/history.js', 'js/evaluation.js', 'js/image.js', 'js/camera.js', 'js/model.js',
   'js/views/home.js', 'js/views/scan.js', 'js/views/result-card.js', 'js/views/history.js',
   'js/views/learn.js', 'js/views/quiz.js', 'js/views/dashboard.js', 'js/views/fruits.js',

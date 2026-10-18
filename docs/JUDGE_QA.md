@@ -1,6 +1,6 @@
 # Judge Questions and Answers — FreshCheck AI
 
-Simple answers that match how the app actually works. Numbers below are from the starter model's test on dataset photos (17 Oct 2026). Replace them if you retrain or test with your own photos.
+Simple answers that match how the app actually works. Numbers below are from the v2 models' test on dataset photos (18 Oct 2026). Replace them if you retrain or test with your own photos.
 
 1. **What is artificial intelligence?**
    Computer programs that learn to do tasks from examples instead of being told every rule. My app learned from labelled fruit photos.
@@ -9,7 +9,7 @@ Simple answers that match how the app actually works. Numbers below are from the
    Looking at a whole picture and choosing which group (class) it belongs to — for example "Banana - Fresh" or "Banana - Spoiled".
 
 3. **How did you train the model?**
-   With the Google Teachable Machine library. I used 3,600 photos from public research datasets: 200 fresh and 200 spoiled photos of each of 8 fruits, plus 400 photos of other fruits for an "Other" class. 140 photos per class were used for training, 20 to choose the confidence level and 40 for the final test. It uses transfer learning from a network called MobileNet that already knows general shapes and colours.
+   With the Google Teachable Machine library I trained **two** models from 34,257 photos in public research datasets: a fruit recogniser for 51 fruits (plus "Not a fruit"), and a freshness checker for 16 fruits with up to 500 fresh and 500 spoiled photos each. 70% of the photos were for training, 10% to choose the confidence levels and 20% for the final test.
 
 4. **What is transfer learning?**
    Starting from a network that has already learned from over a million everyday photos, and training only the last part on my fruit photos. That's why I didn't need millions of photos.
@@ -18,7 +18,7 @@ Simple answers that match how the app actually works. Numbers below are from the
    The model gives every class a score; they add up to 100%. The confidence is the score of the top class. It shows how strongly the model prefers that answer — it is **not** the chance that the fruit is safe.
 
 6. **How do you know the model works?**
-   I tested it with 720 photos it had **never seen during training**. When it gave an answer it was correct 98.6% of the time. It called 2 spoiled fruits "fresh", so Banana and Strawberry are still marked "Experimental". Those test photos came from the same datasets as the training photos, so on real phone photos it may do worse — that's why I also test with my own photos. The app's "Test the model" screen makes a confusion matrix.
+   I tested it on 2,691 freshness photos and 4,963 fruit photos it had **never seen during training**. When the app gave a freshness answer it was right 98% of the time, and it named the fruit correctly 95% of the time. But 13 spoiled fruits (about 1%) were called fresh, so banana and orange are still "Experimental". The test photos came from the same datasets, so real phone photos may be harder — that's why I also test with my own photos.
 
 7. **What is a confusion matrix?**
    A table showing what each photo really was (rows) and what the app answered (columns). It shows which classes get mixed up.
@@ -36,10 +36,10 @@ Simple answers that match how the app actually works. Numbers below are from the
     Ripening is the fruit's own chemical change (ethylene gas, starch to sugar). Spoilage is mostly microbes like mould and bacteria breaking the fruit down.
 
 12. **What happens when the model is uncertain?**
-    If the top score is below the threshold (70%), or two classes are close, or the photo is too dark, or it looks like "Not a fruit", the app shows "Uncertain — Inspect Manually" and tells you to check the fruit yourself or ask an adult.
+    If the top score is below the threshold (90% for freshness, 70% for naming the fruit), or two classes are close, or the photo is too dark, or it looks like "Not a fruit", the app shows "Uncertain — Inspect Manually" and tells you to check the fruit yourself or ask an adult.
 
 13. **How did you choose the threshold?**
-    I tried thresholds from 50% to 95% on 360 separate validation photos and chose 70%, the setting with the fewest spoiled fruits marked fresh and the best accuracy.
+    I tried thresholds from 50% to 95% on separate validation photos and picked 90% for freshness, because it gave no spoiled fruit marked fresh on those photos. For the fruit recogniser I picked 70%, the lowest level where it was right at least 95% of the time.
 
 14. **What if I show it a shoe?**
     It might still give a score to a fruit class — classifiers only know the classes they were trained on. I added a "Not a fruit" class and a threshold to reduce this, but it can still make mistakes. That's a known limitation.
@@ -51,7 +51,7 @@ Simple answers that match how the app actually works. Numbers below are from the
     It helps people look carefully, tells them overripe fruit is usually still useful (smoothies, cooking), and teaches the difference between ripe and spoiled. We don't claim to measure food saved — a scan doesn't prove anything was eaten.
 
 17. **Which fruits does it support?**
-    Apple, Orange, Mango, Grapes, Guava and Papaya passed testing on unseen dataset photos. Banana and Strawberry are "Experimental" because each had one spoiled photo called fresh.
+    It can name 51 fruits. It checks freshness for 16; five passed every test (apple, lime, mango, papaya, strawberry) and the rest are "Experimental". For the other 35 fruits it names the fruit and shows tips instead of guessing.
 
 18. **Why did you start with only a few fruits?**
     Each fruit needs many varied photos for every condition, and testing. Doing a few fruits properly is better than many badly.
@@ -79,3 +79,9 @@ Simple answers that match how the app actually works. Numbers below are from the
 
 24. **Did you write the code yourself?**
     *(Answer honestly — e.g. "I worked with an AI coding assistant to write the app; I collected and labelled the photos, trained and tested the model, and I can explain how each part works.")*
+
+27. **Why only 16 fruits for freshness when it knows 51?**
+    I could only find legal, free research photos of *rotten* fruit for 16 fruits. Copying random internet photos would break their licences, so for the other fruits the app is honest and says it cannot check freshness yet.
+
+28. **What happens if the two AIs disagree?**
+    The app says "Uncertain" and asks you to check the fruit yourself. It only gives a freshness answer when both agree on which fruit it is.

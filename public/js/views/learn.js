@@ -98,6 +98,15 @@ const TOPICS = [
       <p>All of this happens <strong>on the phone</strong>, using TensorFlow.js. The photo is never sent to the internet.</p>`,
   },
   {
+    id: 'two-ais', title: 'Two AIs working together',
+    body: html`<p>FreshCheck AI uses <strong>two</strong> image classifiers, like asking two experts:</p>
+      <ol class="steps">
+        <li><strong>The fruit recogniser</strong> answers "Which fruit is this?" It was trained on photos of about 50 kinds of fruit, plus vegetables and nuts as "Not a fruit".</li>
+        <li><strong>The freshness checker</strong> answers "Does it look fresh or spoiled?" It only knows fruits for which scientists have shared photos of both fresh and rotten fruit.</li>
+      </ol>
+      <p>The app only shows a freshness answer when <strong>both experts agree</strong> on the fruit. If they disagree, it says <em>Uncertain</em>. If the fruit is one the freshness checker never learned (like kiwi), the app names the fruit and shows tips for checking it yourself — it does not guess.</p>`,
+  },
+  {
     id: 'ai-mistakes', title: 'Why can AI make mistakes?',
     body: html`<ul class="steps">
       <li><strong>It only knows its training photos.</strong> A fruit variety, background or light it has never seen can confuse it.</li>
@@ -114,7 +123,7 @@ const TOPICS = [
   },
 ];
 
-const EMOJI = { ripening: '🍌', spoilage: '🦠', 'ripe-vs-spoiled': '⚖️', 'brown-spots': '🟤', 'food-waste': '🌍', 'how-ai': '🧠', 'ai-mistakes': '🤔', safety: '🛡️' };
+const EMOJI = { 'two-ais': '🤝', ripening: '🍌', spoilage: '🦠', 'ripe-vs-spoiled': '⚖️', 'brown-spots': '🟤', 'food-waste': '🌍', 'how-ai': '🧠', 'ai-mistakes': '🤔', safety: '🛡️' };
 
 export function render(main, params) {
   const active = params[0];

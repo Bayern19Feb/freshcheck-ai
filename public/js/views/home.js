@@ -24,7 +24,7 @@ export function render(main) {
     </section>
 
     <div class="trust" style="margin-top:14px">
-      <div>${icon('apple')}<strong>8 fruits</strong><span>Fresh or spoiled</span></div>
+      <div>${icon('apple')}<strong>${FRUITS.length} fruits</strong><span>In the fruit library</span></div>
       <div>${icon('shield')}<strong>Private</strong><span>Photos stay on this phone</span></div>
       <div>${icon('download')}<strong>Offline</strong><span>Works without internet</span></div>
     </div>
@@ -43,13 +43,13 @@ export function render(main) {
       <a class="tile" href="#/learn"><span class="icon-chip">${icon('book')}</span><strong>Learning centre</strong><span>Ripening, spoilage and how AI works</span></a>
       <a class="tile" href="#/quiz"><span class="icon-chip mango">${icon('star')}</span><strong>Quiz</strong><span>Test what you have learned</span></a>
       <a class="tile" href="#/dashboard"><span class="icon-chip sky">${icon('chart')}</span><strong>My dashboard</strong><span>Counts from your saved scans</span></a>
-      <a class="tile" href="#/fruits"><span class="icon-chip berry">${icon('apple')}</span><strong>Supported fruits</strong><span>Which fruits the model can check</span></a>
+      <a class="tile" href="#/fruits"><span class="icon-chip berry">${icon('apple')}</span><strong>Fruit library</strong><span>${FRUITS.length} fruits, tips and AI status</span></a>
     </div>
 
-    <section class="card tint center" aria-label="Target fruits" style="margin-top:16px">
-      <p class="eyebrow">Target fruits</p>
-      <div class="fruit-strip" aria-hidden="true">${FRUITS.map((f) => html`<span title="${f.name}">${f.emoji}</span>`)}</div>
-      <p class="small muted" style="margin:12px 0 0">A fruit is only "supported" after the model passes testing. <a href="#/fruits">See status</a></p>
+    <section class="card tint center" aria-label="Fruit library" style="margin-top:16px">
+      <p class="eyebrow">${FRUITS.length} fruits in the library</p>
+      <div class="fruit-strip" aria-hidden="true">${[...new Set(FRUITS.map((f) => f.emoji))].slice(0, 16).map((e) => html`<span>${e}</span>`)}</div>
+      <p class="small muted" style="margin:12px 0 0">The AI names many fruits, and checks freshness only for fruits it was trained and tested on. <a href="#/fruits">Open the fruit library</a></p>
     </section>
   `);
 

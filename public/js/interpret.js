@@ -1,7 +1,7 @@
 // Turns the raw output of the model into a result the app can show.
 // This file never invents numbers: every score comes from the model output.
 
-import { parseLabel, CONDITIONS } from './fruits.js';
+import { parseLabel, parseFruitName, CONDITIONS } from './fruits.js';
 
 export class MalformedOutputError extends Error {}
 
@@ -115,8 +115,94 @@ export function interpret(predictions, options) {
   return result;
 }
 
+/**
+ * Combine the freshness result with the fruit-identifier model (second opinion).
+ *
+ * freshResult   output of interpret() for the freshness model
+ * idPredictions raw identifier scores, or null when no identifier model is loaded
+ * options       { idThreshold, freshFruits: Set of fruit ids the freshness model covers,
+ *                 userFruitId, poorImage }
+ *
+ * Rules (never invents an answer):
+ *  - identifier says "Not a fruit" confidently        -> uncertain (not-a-fruit)
+ *  - identifier unsure                                -> keep freshness result only if both
+ *                                                        models' top fruit agree, else uncertain
+ *  - fruit WITHOUT freshness data                     -> 'identified' (name the fruit, no freshness claim)
+ *  - fruit WITH freshness data but models disagree    -> uncertain (models-disagree)
+ *  - otherwise                                        -> freshness result
+ */
+export function combine(freshResult, idPredictions, options) {
+  if (!idPredictions) return freshResult;
+  validatePredictions(idPredictions, options.idExpectedCount);
+  const ranked = [...idPredictions]
+    .map((p) => ({ className: p.className, probability: p.probability, parsed: parseFruitName(p.className) }))
+    .sort((a, b) => b.probability - a.probability);
+  const top = ranked[0];
+  const idThreshold = options.idThreshold ?? 0.6;
+  const out = {
+    ...freshResult,
+    reasons: [...freshResult.reasons],
+    identifiedFruitId: top.parsed.kind === 'fruit' ? top.parsed.fruitId : null,
+    idTopClass: top.className,
+    idConfidence: top.probability,
+    idThreshold,
+    idScores: ranked.slice(0, 5).map((r) => ({ className: r.className, probability: r.probability })),
+    freshnessAvailable: true,
+  };
+  const uncertain = (reason) => {
+    out.conditionId = 'uncertain';
+    if (!out.reasons.includes(reason)) out.reasons.push(reason);
+    return out;
+  };
+  const idSure = top.probability >= idThreshold;
+
+  if (top.parsed.kind === 'reject') {
+    if (idSure) {
+      out.detectedFruitId = null;
+      out.fruitConfidence = null;
+      out.reasons = out.reasons.filter((r) => r !== 'fruit-mismatch');
+      return uncertain('not-a-fruit');
+    }
+    return freshResult.conditionId === 'uncertain' ? out : uncertain('low-confidence-id');
+  }
+  if (top.parsed.kind !== 'fruit') return uncertain('unknown-class');
+
+  const fruitId = top.parsed.fruitId;
+  if (!idSure) {
+    // Only trust the freshness answer if both models point to the same fruit.
+    return freshResult.detectedFruitId === fruitId ? out : uncertain('low-confidence-id');
+  }
+
+  if (!options.freshFruits?.has(fruitId)) {
+    // A fruit the freshness model was never trained on: name it, but make no freshness claim.
+    out.detectedFruitId = fruitId;
+    out.fruitConfidence = top.probability;
+    out.freshnessAvailable = false;
+    out.experimental = false;
+    out.threshold = idThreshold;
+    out.topClass = top.className;
+    out.confidence = top.probability;
+    out.reasons = [];
+    if (options.poorImage) out.reasons.push('poor-image');
+    if (out.userFruitId && out.userFruitId !== fruitId) {
+      out.fruitMismatch = true;
+      out.reasons.push('fruit-mismatch');
+    }
+    out.conditionId = out.reasons.length ? 'uncertain' : 'identified';
+    return out;
+  }
+
+  if (freshResult.detectedFruitId !== fruitId) {
+    out.reasons = out.reasons.filter((r) => r !== 'not-a-fruit');
+    return uncertain('models-disagree');
+  }
+  return out;
+}
+
 export const REASON_TEXT = {
-  'not-a-fruit': 'The model thinks this photo does not show a supported fruit.',
+  'not-a-fruit': 'The AI thinks this photo does not show a fruit it knows.',
+  'models-disagree': 'The fruit recogniser and the freshness checker disagreed about which fruit this is.',
+  'low-confidence-id': 'The fruit recogniser was not sure which fruit this is.',
   'unknown-class': 'The model chose a class name that this app does not recognise. Check the class names in the model (see the AI Model Guide).',
   'fruit-not-supported': 'This fruit is not supported by the current model.',
   'low-confidence': 'The model\'s confidence is below the threshold set for this fruit.',

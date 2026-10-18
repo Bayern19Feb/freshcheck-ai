@@ -1,74 +1,386 @@
 {
   "_comment": "Edit this file after training and evaluating a model. See docs/AI_MODEL_GUIDE.md. Never enter results you did not measure.",
-  "modelName": "freshcheck-starter",
-  "modelVersion": "starter-v1",
-  "exportDate": "2026-10-17T08:38:50.328Z",
-  "source": "Starter model trained by the project with the Teachable Machine library (same method as the Teachable Machine website), from openly licensed public datasets. See docs/MODEL_EVALUATION.md.",
-  "architecture": "Teachable Machine image model (MobileNet transfer learning), combined fruit + condition classes, run in the browser with TensorFlow.js",
-  "trainingData": "Public datasets: Project-AgML fresh_rotten_fruit_classification / Sultana et al. 2022 (CC BY 4.0) for apple, banana, orange, grapes, strawberry, guava and the \"Other\" class (jujube, pomegranate); Papaya Freshness Classification Dataset, Mendeley 7mgj5bvp5h (CC BY 4.0); FruitVision, Mendeley xkbjx8959c (CC BY-NC-ND 4.0) for mango. n/a training photos (+ mirrored copies), 360 validation, 720 test. No overripe class.",
-  "testProcedure": "Threshold chosen on 360 validation photos; final results measured on 720 separate test photos from the same datasets (near-duplicates kept on one side of the split). Not yet tested on phone photos of real fruit.",
-  "lastVerified": "2026-10-17",
+  "modelName": "freshcheck-v2 (fruit recogniser + freshness checker)",
+  "modelVersion": "v2",
+  "exportDate": "2026-10-18T16:29:01.370Z",
+  "source": "Trained by the project with the Teachable Machine library (same method as the Teachable Machine website) from openly licensed public datasets. See docs/MODEL_EVALUATION.md.",
+  "architecture": "Two Teachable Machine image models (MobileNet v2 transfer learning) run in the browser with TensorFlow.js: a fruit recogniser (fruit names + \"Not a fruit\") and a freshness checker (fruit × Fresh/Spoiled + \"Other\"). The app only shows a freshness answer when both agree.",
+  "trainingData": "Sultana et al. 2022 (CC BY 4.0), FruitNet (CC BY 4.0), Papaya Freshness Dataset (CC BY 4.0), FruQ-DB/FruQ-multi (CC BY 4.0), FruitVision (CC BY-NC-ND 4.0, mango + some grapes), Fruits-360 (CC BY-SA 4.0, fruit recogniser). Up to 500 fresh + 500 spoiled photos per freshness fruit. Full list: data/v2/images.csv (local).",
+  "testProcedure": "Thresholds chosen on validation photos; final results on 2736 freshness test photos and 4963 recogniser test photos never used for training. Near-identical photos and neighbouring video frames were kept on one side of the split.",
+  "lastVerified": "2026-10-18",
   "thresholds": {
-    "default": 0.7,
+    "default": 0.9,
     "perFruit": {}
   },
-  "thresholdNote": "Chosen on 2026-10-17 from 360 validation photos (rule: fewest spoiled-shown-as-fresh errors, then best accuracy). Dataset photos only — re-check with your own phone photos.",
+  "thresholdNote": "Freshness threshold chosen on 2026-10-18 from 1331 validation photos; recogniser threshold 70.0% chosen from 2504 validation photos (lowest with ≥95% correct when answered). Dataset photos only — re-check with your own phone photos.",
   "minMargin": 0.15,
   "fruits": {
     "apple": {
       "evaluation": "passed",
-      "testImages": 80,
-      "accuracy": 0.962,
-      "notes": "2026-10-17: dataset test photos only (not phone photos). Correct when answered 96.2%, answered 97.5%, spoiled shown as fresh 0."
+      "testImages": 200,
+      "accuracy": 0.959,
+      "idAccuracy": 0.829,
+      "notes": "2026-10-18, whole app on dataset test photos: correct when answered 95.9%, answered 84.5%, spoiled shown as fresh 0. Recogniser: 82.9% top-1 on 123 test photos."
     },
     "banana": {
       "evaluation": "failed",
-      "testImages": 80,
-      "accuracy": 0.988,
-      "notes": "2026-10-17: dataset test photos only (not phone photos). Correct when answered 98.8%, answered 100.0%, spoiled shown as fresh 1."
+      "testImages": 200,
+      "accuracy": 0.975,
+      "idAccuracy": 1,
+      "notes": "2026-10-18, whole app on dataset test photos: correct when answered 97.5%, answered 99.0%, spoiled shown as fresh 5. Recogniser: 100.0% top-1 on 136 test photos."
     },
     "orange": {
-      "evaluation": "passed",
-      "testImages": 80,
-      "accuracy": 1,
-      "notes": "2026-10-17: dataset test photos only (not phone photos). Correct when answered 100.0%, answered 97.5%, spoiled shown as fresh 0."
+      "evaluation": "failed",
+      "testImages": 200,
+      "accuracy": 0.958,
+      "idAccuracy": 0.921,
+      "notes": "2026-10-18, whole app on dataset test photos: correct when answered 95.8%, answered 82.5%, spoiled shown as fresh 4. Recogniser: 92.1% top-1 on 139 test photos."
     },
     "mango": {
       "evaluation": "passed",
-      "testImages": 80,
-      "accuracy": 0.975,
-      "notes": "2026-10-17: dataset test photos only (not phone photos). Correct when answered 97.5%, answered 98.8%, spoiled shown as fresh 0."
+      "testImages": 200,
+      "accuracy": 0.995,
+      "idAccuracy": 1,
+      "notes": "2026-10-18, whole app on dataset test photos: correct when answered 99.5%, answered 98.5%, spoiled shown as fresh 0. Recogniser: 100.0% top-1 on 139 test photos."
     },
     "grapes": {
-      "evaluation": "passed",
-      "testImages": 80,
-      "accuracy": 0.988,
-      "notes": "2026-10-17: dataset test photos only (not phone photos). Correct when answered 98.8%, answered 100.0%, spoiled shown as fresh 0."
+      "evaluation": "failed",
+      "testImages": 199,
+      "accuracy": 0.995,
+      "idAccuracy": 0.992,
+      "notes": "2026-10-18, whole app on dataset test photos: correct when answered 99.5%, answered 97.5%, spoiled shown as fresh 1. Recogniser: 99.2% top-1 on 132 test photos."
     },
     "strawberry": {
-      "evaluation": "failed",
-      "testImages": 80,
-      "accuracy": 0.988,
-      "notes": "2026-10-17: dataset test photos only (not phone photos). Correct when answered 98.8%, answered 100.0%, spoiled shown as fresh 1."
+      "evaluation": "passed",
+      "testImages": 99,
+      "accuracy": 1,
+      "idAccuracy": 1,
+      "notes": "2026-10-18, whole app on dataset test photos: correct when answered 100.0%, answered 99.0%, spoiled shown as fresh 0. Recogniser: 100.0% top-1 on 134 test photos."
     },
     "guava": {
-      "evaluation": "passed",
-      "testImages": 80,
-      "accuracy": 1,
-      "notes": "2026-10-17: dataset test photos only (not phone photos). Correct when answered 100.0%, answered 97.5%, spoiled shown as fresh 0."
+      "evaluation": "failed",
+      "testImages": 200,
+      "accuracy": 0.977,
+      "idAccuracy": 0.97,
+      "notes": "2026-10-18, whole app on dataset test photos: correct when answered 97.7%, answered 88.5%, spoiled shown as fresh 1. Recogniser: 97.0% top-1 on 135 test photos."
     },
     "papaya": {
       "evaluation": "passed",
-      "testImages": 80,
+      "testImages": 200,
       "accuracy": 1,
-      "notes": "2026-10-17: dataset test photos only (not phone photos). Correct when answered 100.0%, answered 98.8%, spoiled shown as fresh 0."
+      "idAccuracy": 0.992,
+      "notes": "2026-10-18, whole app on dataset test photos: correct when answered 100.0%, answered 96.5%, spoiled shown as fresh 0. Recogniser: 99.2% top-1 on 131 test photos."
+    },
+    "apricot": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 1,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 100.0% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "avocado": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 0.988,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 98.8% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "blackberry": {
+      "evaluation": "not-applicable",
+      "testImages": 78,
+      "accuracy": null,
+      "idAccuracy": 0.974,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 97.4% top-1 on 78 test photos (rotating-fruit photos on a white background only)."
+    },
+    "blueberry": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 1,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 100.0% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "cactus-fruit": {
+      "evaluation": "not-applicable",
+      "testImages": 78,
+      "accuracy": null,
+      "idAccuracy": 1,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 100.0% top-1 on 78 test photos (rotating-fruit photos on a white background only)."
+    },
+    "cherimoya": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 1,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 100.0% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "cherry": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 0.95,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 95.0% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "coconut": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 1,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 100.0% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "dates": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 1,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 100.0% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "dragon-fruit": {
+      "evaluation": "not-applicable",
+      "testImages": 78,
+      "accuracy": null,
+      "idAccuracy": 0.974,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 97.4% top-1 on 78 test photos (rotating-fruit photos on a white background only)."
+    },
+    "fig": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 0.975,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 97.5% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "gooseberry": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 1,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 100.0% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "grapefruit": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 1,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 100.0% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "jujube": {
+      "evaluation": "failed",
+      "testImages": 80,
+      "accuracy": 0.986,
+      "idAccuracy": 0.952,
+      "notes": "2026-10-18, whole app on dataset test photos: correct when answered 98.6%, answered 92.5%, spoiled shown as fresh 1. Recogniser: 95.2% top-1 on 62 test photos."
+    },
+    "kiwi": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 1,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 100.0% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "kumquat": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 0.975,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 97.5% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "lemon": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 0.925,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 92.5% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "lime": {
+      "evaluation": "passed",
+      "testImages": 200,
+      "accuracy": 0.876,
+      "idAccuracy": 0.922,
+      "notes": "2026-10-18, whole app on dataset test photos: correct when answered 87.6%, answered 85.0%, spoiled shown as fresh 0. Recogniser: 92.2% top-1 on 141 test photos."
+    },
+    "lychee": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 1,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 100.0% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "mandarin": {
+      "evaluation": "not-applicable",
+      "testImages": 78,
+      "accuracy": null,
+      "idAccuracy": 1,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 100.0% top-1 on 78 test photos (rotating-fruit photos on a white background only)."
+    },
+    "mangosteen": {
+      "evaluation": "not-applicable",
+      "testImages": 60,
+      "accuracy": null,
+      "idAccuracy": 0.983,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 98.3% top-1 on 60 test photos (rotating-fruit photos on a white background only)."
+    },
+    "melon": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 1,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 100.0% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "mulberry": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 0,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 0.0% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "nectarine": {
+      "evaluation": "not-applicable",
+      "testImages": 78,
+      "accuracy": null,
+      "idAccuracy": 0.769,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 76.9% top-1 on 78 test photos (rotating-fruit photos on a white background only)."
+    },
+    "passion-fruit": {
+      "evaluation": "not-applicable",
+      "testImages": 78,
+      "accuracy": null,
+      "idAccuracy": 1,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 100.0% top-1 on 78 test photos (rotating-fruit photos on a white background only)."
+    },
+    "peach": {
+      "evaluation": "failed",
+      "testImages": 185,
+      "accuracy": 1,
+      "idAccuracy": 0.942,
+      "notes": "2026-10-18, whole app on dataset test photos: correct when answered 100.0%, answered 83.2%, spoiled shown as fresh 0. Trained from a single time-lapse video, so test photos show the same fruit — kept Experimental. Recogniser: 94.2% top-1 on 139 test photos."
+    },
+    "pear": {
+      "evaluation": "failed",
+      "testImages": 120,
+      "accuracy": 1,
+      "idAccuracy": 0.946,
+      "notes": "2026-10-18, whole app on dataset test photos: correct when answered 100.0%, answered 100.0%, spoiled shown as fresh 0. Trained from a single time-lapse video, so test photos show the same fruit — kept Experimental. Recogniser: 94.6% top-1 on 130 test photos."
+    },
+    "pepino": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 1,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 100.0% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "persimmon": {
+      "evaluation": "failed",
+      "testImages": 168,
+      "accuracy": 1,
+      "idAccuracy": 0.907,
+      "notes": "2026-10-18, whole app on dataset test photos: correct when answered 100.0%, answered 100.0%, spoiled shown as fresh 0. Trained from a single time-lapse video, so test photos show the same fruit — kept Experimental. Recogniser: 90.7% top-1 on 140 test photos."
+    },
+    "physalis": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 0.975,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 97.5% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "pineapple": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 1,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 100.0% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "plum": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 0.912,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 91.3% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "pomegranate": {
+      "evaluation": "failed",
+      "testImages": 200,
+      "accuracy": 0.984,
+      "idAccuracy": 0.95,
+      "notes": "2026-10-18, whole app on dataset test photos: correct when answered 98.4%, answered 93.0%, spoiled shown as fresh 1. Recogniser: 95.0% top-1 on 139 test photos."
+    },
+    "pomelo": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 1,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 100.0% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "quince": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 0.938,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 93.8% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "rambutan": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 1,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 100.0% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "raspberry": {
+      "evaluation": "not-applicable",
+      "testImages": 78,
+      "accuracy": null,
+      "idAccuracy": 1,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 100.0% top-1 on 78 test photos (rotating-fruit photos on a white background only)."
+    },
+    "redcurrant": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 1,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 100.0% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "salak": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 1,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 100.0% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "star-fruit": {
+      "evaluation": "not-applicable",
+      "testImages": 78,
+      "accuracy": null,
+      "idAccuracy": 0.974,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 97.4% top-1 on 78 test photos (rotating-fruit photos on a white background only)."
+    },
+    "tamarillo": {
+      "evaluation": "not-applicable",
+      "testImages": 80,
+      "accuracy": null,
+      "idAccuracy": 1,
+      "notes": "2026-10-18: no freshness check (no licensed fresh/rotten photos found). Recogniser: 100.0% top-1 on 80 test photos (rotating-fruit photos on a white background only)."
+    },
+    "tomato": {
+      "evaluation": "failed",
+      "testImages": 200,
+      "accuracy": 1,
+      "idAccuracy": 0.978,
+      "notes": "2026-10-18, whole app on dataset test photos: correct when answered 100.0%, answered 100.0%, spoiled shown as fresh 0. Trained from a single time-lapse video, so test photos show the same fruit — kept Experimental. Recogniser: 97.8% top-1 on 136 test photos."
+    },
+    "watermelon": {
+      "evaluation": "failed",
+      "testImages": 40,
+      "accuracy": 1,
+      "idAccuracy": 1,
+      "notes": "2026-10-18, whole app on dataset test photos: correct when answered 100.0%, answered 100.0%, spoiled shown as fresh 0. Trained from a single time-lapse video, so test photos show the same fruit — kept Experimental. Recogniser: 100.0% top-1 on 120 test photos."
     }
   },
   "knownLimitations": [
-    "The model looks only at the outside of the fruit in one photo. It cannot see inside the fruit, detect bacteria or toxins, or decide whether food is safe to eat.",
-    "It is a whole-image classifier: it does not point to particular spots, mould patches or defects.",
-    "Trained and tested only on public dataset photos. Accuracy on your own phone photos, lighting and backgrounds is likely lower and has not been measured yet.",
-    "No \"overripe\" class: the datasets only label fresh and rotten fruit, so ripe fruit with natural spots may be called spoiled.",
-    "The \"Other\" class only contains jujube and pomegranate. Photos of everyday objects (not fruit) can still get a confident fruit label."
-  ]
+    "The models look only at the outside of the fruit in one photo. They cannot see inside the fruit, detect bacteria or toxins, or decide whether food is safe to eat.",
+    "Whole-image classifiers: they do not point to particular spots, mould patches or defects.",
+    "Trained and tested only on public dataset photos. Accuracy on your own phone photos is likely lower and has not been measured yet.",
+    "Freshness is checked only for fruits with licensed fresh/rotten photos; other fruits are only named.",
+    "Many recogniser photos (Fruits-360) show single fruits rotating on a white background, so recognition of those fruits in real kitchens may be weaker.",
+    "No \"overripe\" class: the datasets label fresh and rotten only.",
+    "Everyday objects that are not fruit can still be mistaken for a fruit."
+  ],
+  "idThreshold": 0.7
 }

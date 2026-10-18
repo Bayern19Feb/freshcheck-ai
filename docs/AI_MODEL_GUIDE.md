@@ -233,3 +233,24 @@ Built automatically so the app works before your own photos are ready.
 **No Overripe class:** the datasets only label fresh and rotten. Train your own `Banana - Overripe` class to add it.
 
 **Rebuild:** `python -m venv .venv && .venv/Scripts/python -m pip install pillow pyarrow requests`, then `npm run dataset` (≈ 4 GB download, ≈ 30 min) and `npm run train`.
+
+## 13. Version 2 (18 Oct 2026): fruit recogniser + freshness checker
+
+**Why two models?** Licensed photos of *rotten* fruit exist for only ~16 fruits, but photos for recognising fruit exist for 50+. So:
+
+| Model | Folder | Classes | Training photos |
+|---|---|---|---|
+| Fruit recogniser | `public/models/fruit-id/` | 51 fruit names + `Not a fruit` | Fruits-360 (≤400 per fruit) + 300 real freshness photos per freshness fruit; vegetables/nuts as "Not a fruit" |
+| Freshness checker | `public/models/fruit-freshness/` | 16 fruits × `Fresh` / `Spoiled` + `Other` | Up to 500 fresh + 500 spoiled per fruit |
+
+**App logic** (`combine()` in `public/js/interpret.js`): recogniser sure + both agree → freshness answer; fruit has no freshness data → "Fruit Identified — Check Freshness Yourself" + tips; they disagree or the recogniser is unsure → Uncertain; recogniser says "Not a fruit" → Uncertain. If you install your own single Teachable Machine model (Settings → Model location), the recogniser is switched off automatically unless you also set `idModelUrl`.
+
+**Data sources** (all checked on their dataset pages, 18 Oct 2026): Sultana et al. 2022 / AgML (CC BY 4.0), FruitNet (CC BY 4.0), Papaya Freshness (CC BY 4.0), FruQ-multi (CC BY 4.0, time-lapse frames), FruitVision (CC BY-NC-ND 4.0), Fruits-360 (CC BY-SA 4.0). Every photo, its source, licence and split are listed in `data/v2/images.csv` (local).
+
+**Splits:** 70 / 10 / 20 per fruit + condition + source. Near-identical photos (dHash ≤ 6 bits) stay together; time-lapse and rotating-fruit frames are split in contiguous blocks.
+
+**Training:** Teachable Machine library, MobileNet v2 α 0.35; 30 epochs, batch 32, learning rate 0.001, 128 dense units; mirrored copies for the freshness model.
+
+**Results:** see [MODEL_EVALUATION.md](MODEL_EVALUATION.md). Freshness fruits from a single time-lapse video (peach, pear, persimmon, tomato, watermelon) stay Experimental regardless of score.
+
+**Rebuild:** `npm run dataset:v2` then `npm run train:v2`.

@@ -3,7 +3,7 @@
 import { FRUITS } from './fruits.js';
 
 export function computeStats(records) {
-  const byCondition = { fresh: 0, overripe: 0, spoiled: 0, uncertain: 0 };
+  const byCondition = { fresh: 0, overripe: 0, spoiled: 0, identified: 0, uncertain: 0 };
   const byFruit = {};
   let helpfulYes = 0;
   let helpfulNo = 0;
